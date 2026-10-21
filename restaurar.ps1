@@ -124,29 +124,73 @@ if (-not $execPolicy -or $execPolicy -eq 'Restricted') {
 
 # PowerShell 7 e necessario (perfis e recursos usados pelo script)
 if ($PSVersionTable.PSVersion.Major -lt 7) {
-    # Tenta instalar via winget se nao estiver disponível
-    $redeOk = RedeOk
-    if (-not $redeOk) {
-        Erro "PowerShell 7 nao esta instalado e nao ha conexao com a internet para baixar."
-        Erro 'Instale manualmente: winget install Microsoft.PowerShell'
-        exit 1
+    # Se ja tentamos instalar e estamos rodando no pwsh, nao faca nada (evita loop infinito)
+    $jaTentouInstalar = $env:SHELLFORGE_INSTALOU_PW7 -eq '1'
+
+    if (-not $jaTentouInstalar) {
+        # Tenta instalar via winget
+        $redeOk = RedeOk
+        if (-not $redeOk) {
+            Erro "PowerShell 7 nao esta instalado e nao ha conexao com a internet para baixar."
+            Erro 'Instale manualmente: winget install Microsoft.PowerShell'
+            exit 1
+        }
+        Executar 'Instalar PowerShell 7 via winget' {
+            & winget install --id Microsoft.PowerShell -e --silent --accept-package-agreements --accept-source-agreements | Out-Null
+        }
+        # Marca que ja instalamos para nao loopar
+        $env:SHELLFORGE_INSTALOU_PW7 = '1'
     }
-    Executar 'Instalar PowerShell 7 via winget' {
-        & winget install --id Microsoft.PowerShell -e --silent --accept-package-agreements --accept-source-agreements | Out-Null
-    }
-    # Verifica se ficou disponível após a instalação
+
+    # Procura o pwsh.exe
     $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
     if (-not $pwsh) {
         # winget pode nao atualizar o PATH desta sessao; procura o exe direto
         $pwshExe = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter 'pwsh.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($pwshExe) { $pwsh = $pwshExe.FullName }
     }
+
     if (-not $pwsh) {
         Erro "Falha ao instalar o PowerShell 7 via winget."
         Erro 'Instale manualmente: winget install Microsoft.PowerShell'
         exit 1
     }
-    Ok "PowerShell 7 instalado: $pwsh"
+
+    Ok "PowerShell 7 encontrado: $pwsh"
+
+    # Reinicia o proprio script usando o PowerShell 7 recem instalado
+    $scriptPath = $PSScriptRoot
+    $scriptFile = Join-Path $scriptPath 'restaurar.ps1'
+
+    # Verifica se precisamos de administrador (para gravação em HKCR, por exemplo)
+    $precisaAdmin = $false
+    $identidade = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identidade)
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        $precisaAdmin = $true
+    }
+
+    if ($precisaAdmin) {
+        Write-Host ''
+        Write-Host '===========================================================' -ForegroundColor Yellow
+        Write-Host '  Requisito: privilegios de administrador' -ForegroundColor Yellow
+        Write-Host '===========================================================' -ForegroundColor Yellow
+        Write-Host ''
+        Write-Host '  O PowerShell 7 sera executado como administrador para poder'
+        Write-Host '  gravar no registro do Windows (menu de contexto do Explorer).'
+        Write-Host ''
+        Write-Host '  Uma janela sera aberta solicitando confirmacao de UAC.'
+        Write-Host '===========================================================' -ForegroundColor Yellow
+
+        # Relança o script via pwsh.exe com RunAs (elevado)
+        Start-Process -FilePath $pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptFile`"" -Verb RunAs -Wait
+    } else {
+        # Relança o script via pwsh.exe sem elevacao
+        & $pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptFile
+    }
+
+    # Sai do script atual (Windows PowerShell 5.1) apos lançar o pwsh
+    exit 0
 }
 
 # Log de execucao em arquivo (facilita depuracao em outra maquina)
