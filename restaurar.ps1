@@ -99,6 +99,29 @@ function RedeOk {
     } catch { return $false }
 }
 
+# Verifica Execution Policy do PowerShell (bloqueia execucao de scripts por padrão)
+$execPolicy = Get-ExecutionPolicy -Scope CurrentUser -ErrorAction SilentlyContinue
+if (-not $execPolicy -or $execPolicy -eq 'Restricted') {
+    Write-Host ''
+    Write-Host '===========================================================' -ForegroundColor Yellow
+    Write-Host '  ERRO: Execucao de scripts esta bloqueada no PowerShell' -ForegroundColor Yellow
+    Write-Host '===========================================================' -ForegroundColor Yellow
+    Write-Host ''
+    Write-Host '  Política atual: $execPolicy'
+    Write-Host ''
+    Write-Host '  Para habilitar a execucao de scripts (apenas para seu usuario, sem admin):'
+    Write-Host ''
+    Write-Host '      Set-ExecutionPolicy RemoteSigned -Scope CurrentUser'
+    Write-Host ''
+    Write-Host '  Ou, se preferir desabilitar completamente (nao recomendado):'
+    Write-Host ''
+    Write-Host '      Set-ExecutionPolicy Unrestricted -Scope CurrentUser'
+    Write-Host ''
+    Write-Host '  Depois de executar o comando acima, abra um NOVO PowerShell e rode este script novamente.'
+    Write-Host '===========================================================' -ForegroundColor Yellow
+    exit 1
+}
+
 # PowerShell 7 e necessario (perfis e recursos usados pelo script)
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     # Tenta instalar via winget se nao estiver disponível

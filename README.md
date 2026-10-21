@@ -57,8 +57,11 @@ reinstala ferramentas** de um backup para a máquina atual.
 
 ### Fluxo de restauração (`restaurar.ps1`)
 
-1. **Verificação de ambiente** — confirma PowerShell 7+, testa conexão com a
-   internet (github.com:443) e registra um log em `%TEMP%`.
+1. **Verificação de ambiente** — confirma PowerShell 7+, verifica a
+   `Execution Policy` do PowerShell (se estiver `Restricted`, explica como
+   habilitar com `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`),
+   testa conexão com a internet (github.com:443) e registra um log em
+   `%TEMP%`.
 2. **Ferramentas** — instala o Scoop (se faltar) e os apps de
    `listas/scoop-apps.txt` (oh-my-posh, clink, delta, lazygit, fzf, zoxide,
    jq, git, 7zip, ffmpeg, gradle, nodejs, openjdk21, opencode). Se o Scoop
@@ -273,8 +276,11 @@ It restores:
 
 ### How it works
 
-1. **Environment check**: confirms PowerShell 7+, tests internet connectivity
-   (github.com:443), and starts a log file in `%TEMP%`.
+1. **Environment check**: confirms PowerShell 7+, checks PowerShell
+   `Execution Policy` (if `Restricted`, explains how to enable with
+   `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`),
+   tests internet connectivity (github.com:443), and starts a log file in
+   `%TEMP%`.
 2. **Tools**: installs Scoop if missing (renaming any partial installation to
    a backup), then installs each app from `listas/scoop-apps.txt`. Already
    installed apps (detected via PATH) are skipped. If Scoop is unavailable,
