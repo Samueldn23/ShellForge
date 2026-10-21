@@ -434,6 +434,84 @@ if (Test-Path $arqDistros) {
 } else { Aviso 'lista de distros WSL ausente' }
 
 # ===========================================================================
+Foco '[8/8] PowerShell 7 como padrao do sistema'
+# ===========================================================================
+if ($Simular) {
+    Aviso 'definiria PowerShell 7 como perfil padrao do Windows Terminal e do Windows Explorer'
+} else {
+    # --- 8a: Windows Terminal - definir PowerShell 7 como perfil padrao ---
+    $wtPkg = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json'
+    if (Test-Path $wtPkg) {
+        Executar 'Windows Terminal: definir PowerShell 7 como perfil padrao' {
+            $wtJson = Get-Content $wtPkg -Raw | ConvertFrom-Json
+            $pwshGuid = $null
+
+            # Procurar perfil do PowerShell 7 (source Windows.Terminal.PowershellCore)
+            foreach ($p in $wtJson.profiles.list) {
+                if ($p.source -eq 'Windows.Terminal.PowershellCore') {
+                    $pwshGuid = $p.guid
+                    break
+                }
+                # Fallback: procurar por commandline com pwsh.exe
+                if ($p.commandline -and $p.commandline -like '*pwsh*') {
+                    $pwshGuid = $p.guid
+                    break
+                }
+            }
+
+            if ($pwshGuid) {
+                if ($wtJson.defaultProfile -ne $pwshGuid) {
+                    $wtJson.defaultProfile = $pwshGuid
+                    $wtJson | ConvertTo-Json -Depth 10 | Set-Content $wtPkg -Encoding UTF8 -NoNewline
+                    Ok "defaultProfile definido para: $pwshGuid"
+                } else {
+                    Ok "PowerShell 7 ja e o perfil padrao do Windows Terminal"
+                }
+            } else {
+                Aviso 'Perfil do PowerShell 7 nao encontrado no Windows Terminal'
+            }
+        }
+    } else {
+        Aviso 'Windows Terminal nao encontrado (pacote MSIX ausente)'
+    }
+
+    # --- 8b: Windows Explorer - adicionar PowerShell 7 ao menu de contexto ---
+    Executar 'Windows Explorer: adicionar PowerShell 7 ao menu de contexto (pastas e drives)' {
+        $pwshExe = Join-Path $env:ProgramFiles 'PowerShell\7\pwsh.exe'
+        if (-not (Test-Path $pwshExe)) {
+            $pwshExe = Join-Path $env:LOCALPROGRAMFILES 'PowerShell\7\pwsh.exe'
+        }
+        if (-not (Test-Path $pwshExe)) {
+            Aviso 'pwsh.exe nao encontrado em C:\Program Files\PowerShell\7. Pulando menu de contexto.'
+            return
+        }
+
+        # Comando para o menu de contexto do Explorer
+        $comando = '"' + $pwshExe + '" -NoExit -Command "Set-Location ''%V''"'
+
+        # Directory (pastas)
+        $regDir = 'HKCR:\Directory\shell\PowerShell7'
+        if (-not (Test-Path $regDir)) { New-Item -Path $regDir -Force | Out-Null }
+        Set-ItemProperty -Path $regDir -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
+        Set-ItemProperty -Path $regDir -Name 'Icon' -Value $pwshExe -Type String -Force
+        Set-ItemProperty -Path $regDir -Name 'Position' -Value 'Bottom' -Type String -Force
+        New-Item -Path "$regDir\command" -Force | Out-Null
+        Set-ItemProperty -Path "$regDir\command" -Name '' -Value $comando -Type String -Force
+
+        # Drive (unidades)
+        $regDrv = 'HKCR:\Drive\shell\PowerShell7'
+        if (-not (Test-Path $regDrv)) { New-Item -Path $regDrv -Force | Out-Null }
+        Set-ItemProperty -Path $regDrv -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
+        Set-ItemProperty -Path $regDrv -Name 'Icon' -Value $pwshExe -Type String -Force
+        Set-ItemProperty -Path $regDrv -Name 'Position' -Value 'Bottom' -Type String -Force
+        New-Item -Path "$regDrv\command" -Force | Out-Null
+        Set-ItemProperty -Path "$regDrv\command" -Name '' -Value $comando -Type String -Force
+
+        Ok "PowerShell 7 adicionado ao menu de contexto do Explorer"
+    }
+}
+
+# ===========================================================================
 Write-Host ''
 Write-Host '===========================================================' -ForegroundColor Cyan
 if ($falhas -eq 0) {
@@ -448,6 +526,7 @@ Write-Host '   2. Confira se a Hack Nerd Font esta selecionada no terminal'
 Write-Host '   3. Se o git reclamar do editor, ajuste:'
 Write-Host '        git config --global core.editor "code --wait"'
 Write-Host '   4. Se o Windows Terminal nao Apply, abra o JSON e cole arquivos\settings-terminal.json'
+Write-Host '   5. Clique com o botao direito em uma pasta/disco: "Abrir com PowerShell 7"'
 Write-Host '===========================================================' -ForegroundColor Cyan
 if ($logFile) {
     Stop-Transcript | Out-Null

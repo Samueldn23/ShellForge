@@ -110,8 +110,10 @@ só então substitui. Pode rodar quantas vezes quiser.
 ### Registro e ambiente
 
 - `HKCU\Software\Microsoft\Command Processor\AutoRun` → `chcp 65001 && clink inject --autorun`
+- `HKCR\Directory\shell\PowerShell7` e `HKCR\Drive\shell\PowerShell7` → menu de contexto "Abrir com PowerShell 7"
 - `POSH_THEMES_PATH`, `CLINK_DIR`, `POWERSHELL_TELEMETRY_OPTOUT=1`
 - entrada `scoop\shims` no PATH do usuário
+- `defaultProfile` do Windows Terminal → GUID do PowerShell 7
 
 ### Ferramentas
 
@@ -290,6 +292,9 @@ It restores:
 8. **WSL**: for each existing distro listed in `listas/wsl-distros.txt`,
    installs Oh My Posh if missing, downloads official themes, writes
    `~/.omp/custom.omp.json` and updates `~/.bashrc` (with backup).
+9. **PowerShell 7 as default**: sets PowerShell 7 as default profile in
+   Windows Terminal and adds "Abrir com PowerShell 7" to the right-click
+   context menu of folders and drives in Windows Explorer.
 
 The theme is sent to WSL as **base64** because not every distro mounts Windows
 drives (`/mnt/d`), and Linux is case-sensitive (`/mnt/d` is not `/mnt/D`).
