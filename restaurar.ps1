@@ -101,9 +101,29 @@ function RedeOk {
 
 # PowerShell 7 e necessario (perfis e recursos usados pelo script)
 if ($PSVersionTable.PSVersion.Major -lt 7) {
-    Erro "PowerShell 7 ou superior e necessario (detectado: $($PSVersionTable.PSVersion))."
-    Erro 'Instale com: winget install Microsoft.PowerShell'
-    exit 1
+    # Tenta instalar via winget se nao estiver disponível
+    $redeOk = RedeOk
+    if (-not $redeOk) {
+        Erro "PowerShell 7 nao esta instalado e nao ha conexao com a internet para baixar."
+        Erro 'Instale manualmente: winget install Microsoft.PowerShell'
+        exit 1
+    }
+    Executar 'Instalar PowerShell 7 via winget' {
+        & winget install --id Microsoft.PowerShell -e --silent --accept-package-agreements --accept-source-agreements | Out-Null
+    }
+    # Verifica se ficou disponível após a instalação
+    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+        # winget pode nao atualizar o PATH desta sessao; procura o exe direto
+        $pwshExe = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter 'pwsh.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($pwshExe) { $pwsh = $pwshExe.FullName }
+    }
+    if (-not $pwsh) {
+        Erro "Falha ao instalar o PowerShell 7 via winget."
+        Erro 'Instale manualmente: winget install Microsoft.PowerShell'
+        exit 1
+    }
+    Ok "PowerShell 7 instalado: $pwsh"
 }
 
 # Log de execucao em arquivo (facilita depuracao em outra maquina)

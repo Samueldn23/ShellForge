@@ -38,7 +38,7 @@ Antes de instalar ferramentas, o script **verifica a conexão com a internet**
 
 | Precisa | Como |
 |---|---|
-| **PowerShell 7** | `winget install Microsoft.PowerShell` ou pelo site da Microsoft |
+| **PowerShell 7** | Instalado automaticamente via winget (`Microsoft.PowerShell`) se não estiver presente |
 | **Scoop** | O script tenta instalar automaticamente se faltar.<br>Manual: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`<br>`Invoke-RestMethod -Uri https://get.scoop.sh \| Invoke-Expression` |
 | **Hack Nerd Font** | O script instala automaticamente as fontes de `arquivos/Hack/`. Manual: <https://github.com/ryanoasis/nerd-fonts/releases> → **HackNerdFont-Regular.ttf** |
 | **Windows Terminal** | vem no Windows 11; em versões antigas, pela Store |
@@ -302,7 +302,7 @@ drives (`/mnt/d`), and Linux is case-sensitive (`/mnt/d` is not `/mnt/D`).
 ### Installation
 
 #### Prerequisites
-- **PowerShell 7**: `winget install Microsoft.PowerShell`
+- **PowerShell 7**: installed automatically via winget (`Microsoft.PowerShell`) if not present
 - **Windows Terminal**: included in Windows 11
 - **Git for Windows**: <https://git-scm.com/download/win>
 
