@@ -1,0 +1,44 @@
+# ShellForge - Git ignore
+# Configurações gerais para evitar commitar arquivos temporários e locais
+
+# Arquivos de backup criados pelo script restaurar.ps1
+*.bak.*
+*.backup
+
+# Logs de execução do script
+*.log
+*.log.*
+
+# Arquivos temporários do Windows
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp
+
+# Pasta de logs do PowerShell/ShellForge (se criada)
+%TEMP%\ShellForge-*
+ShellForge-*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+
+# Qualquer pasta de dependências futura (se adicionar build)
+node_modules/
+bin/
+obj/
+__pycache__/
+*.pyc
+
+# Arquivos de ambiente locais (se alguém criar)
+.env
+*.env.local
+
+
+AGENTS.md

@@ -1,0 +1,206 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 4,
+  "final_space": true,
+  "console_title_template": "{{if .Root}}(Admin) {{end}}{{.Folder}}",
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "root",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#f1184c",
+          "foreground": "#242424",
+          "template": ""
+        },
+        {
+          "type": "os",
+          "style": "diamond",
+          "leading_diamond": " ",
+          "background": "#282c34",
+          "foreground": "#3A86FF",
+          "options": {
+            "windows": "",
+            "linux": "",
+            "macos": "",
+            "alpine": "",
+            "arch": "",
+            "centos": "",
+            "debian": "",
+            "elementary": "",
+            "fedora": "",
+            "gentoo": "",
+            "manjaro": "",
+            "mint": "",
+            "opensuse": "",
+            "raspbian": "",
+            "ubuntu": ""
+          },
+          "template": " {{ if .WSL }}WSL at {{ end }}{{.Icon}} "
+        },
+        {
+          "type": "session",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#00D7AF",
+          "template": "  {{ if .SSHSession }}{{ .UserName }}@{{ .HostName }}{{ end }}"
+        },
+        {
+          "type": "time",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#FFBB00",
+          "options": {
+            "time_format": "15:04:05"
+          },
+          "template": "{{ .CurrentDate | date .Format }} "
+        },
+        {
+          "type": "path",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#33DD2D",
+          "options": {
+            "style": "folder",
+            "folder_separator_icon": "/"
+          },
+          "template": " {{ .Path }} "
+        },
+        {
+          "type": "git",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#3A86FF",
+          "options": {
+            "mapped_branches": {
+              "main": " ",
+              "master": " ",
+              "feat/*": " ",
+              "fix/*": " ",
+              "hotfix/*": " ",
+              "bug/*": " "
+            }
+          },
+          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{ if .Staging.Changed }}  {{ .Staging.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Working.Changed }}  {{ .Working.String }}{{ end }}{{ if gt .StashCount 0 }}  {{ .StashCount }}{{ end }} "
+        },
+        {
+          "type": "node",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#3FA65C",
+          "options": {
+            "fetch_package_manager": true,
+            "npm_icon": " ",
+            "yarn_icon": "  "
+          },
+          "template": " {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} "
+        },
+        {
+          "type": "python",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#FFBB00",
+          "options": {
+            "display_mode": "files",
+            "fetch_virtual_env": false
+          },
+          "template": "  {{ if .Error }}{{ .Error }}{{ else }}{{ if .Venv }}{{ .Venv }} {{ end }}{{ .Full }}{{ end }} "
+        },
+        {
+          "type": "java",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#E76F00",
+          "template": "  {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} "
+        },
+        {
+          "type": "dotnet",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#0184bc",
+          "foreground": "#ffffff",
+          "template": "  {{ if .Unsupported }}{{ else }}{{ .Full }}{{ end }} "
+        },
+        {
+          "type": "flutter",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#46B5E7",
+          "template": "  {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} "
+        },
+
+        {
+          "type": "kubectl",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#326CE5",
+          "template": "  {{ .Context }}{{ if .Namespace }} :: {{ .Namespace }}{{ end }}"
+        },
+        {
+          "type": "project",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#242424",
+          "foreground": "#f1184c",
+          "template": "  {{ if .Error }}{{ .Error }}{{ else }}{{ .Name }}{{ if .Version }} ({{ .Version }}){{ end }}{{ end }} "
+        },
+        {
+          "type": "executiontime",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#8800dd",
+          "foreground": "#ffffff",
+          "options": {
+            "style": "austin",
+            "threshold": 1
+          },
+          "template": " <#fefefe></> {{ .FormattedMs }} "
+        },
+        {
+          "type": "status",
+          "style": "powerline",
+          "powerline_symbol": "",
+          "background": "#33DD2D",
+          "background_templates": [
+            "{{ if gt .Code 0 }}#f1184c{{ end }}"
+          ],
+          "foreground": "#242424",
+          "options": {
+            "always_enabled": true
+          },
+          "template": "  "
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#f1184c",
+          "template": "➜ "
+        }
+      ]
+    }
+  ],
+  "transient_prompt": {
+    "background": "transparent",
+    "foreground": "#f1184c",
+    "template": "➜ "
+  }
+}

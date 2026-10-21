@@ -1,0 +1,7 @@
+# Force UTF-8 encoding for text files to avoid mojibake on GitHub
+*.md text encoding=utf-8
+*.ps1 text encoding=utf-8
+*.sh text encoding=utf-8
+*.json text encoding=utf-8
+*.txt text encoding=utf-8
+*.json text encoding=utf-8

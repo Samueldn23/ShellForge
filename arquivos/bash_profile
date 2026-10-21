@@ -1,0 +1,8 @@
+# ---------------------------------------------------------------------------
+# ~/.bash_profile  --  Git Bash (shell de login)
+#
+# Carrega o .bashrc para o prompt do Oh My Posh funcionar tanto em
+# shells de login (Git Bash) quanto em shells nao-login.
+# ---------------------------------------------------------------------------
+
+[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"

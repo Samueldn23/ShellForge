@@ -1,0 +1,54 @@
+# REFERENCIA: snapshot do PATH da maquina original (usuario USER).
+# Caminhos podem nao existir na maquina de destino; use como guia.
+D:\USER\AppData\Local\Programs\Python\Launcher\
+C:\Users\SEU-USUARIO\scoop\apps\openjdk21\current\bin
+C:\Users\SEU-USUARIO\scoop\shims
+C:\Program Files\PowerShell\7
+C:\Program Files\Common Files\Oracle\Java\javapath
+C:\Python314\Scripts\
+C:\Python314\
+C:\WINDOWS\system32
+C:\WINDOWS
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\WINDOWS\System32\OpenSSH\
+C:\ProgramData\chocolatey\bin
+C:\Program Files\dotnet\
+C:\Program Files\PowerShell\7\
+C:\Program Files\nodejs\
+C:\Program Files\Tailscale\
+C:\Program Files\GitHub CLI\
+C:\Program Files\Cloudflare\Cloudflare WARP\
+C:\Program Files\OpenZFS On Windows
+C:\Program Files\Git\cmd
+C:\Program Files\Microsoft SQL Server\170\Tools\Binn\
+C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\
+C:\Program Files\Common Files\Oracle\Java\javapath
+C:\Python314\Scripts\
+C:\Python314\
+C:\WINDOWS\system32
+C:\WINDOWS
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\WINDOWS\System32\OpenSSH\
+C:\ProgramData\chocolatey\bin
+C:\Program Files\dotnet\
+C:\Program Files\PowerShell\7\
+C:\Program Files\nodejs\
+C:\Program Files\Tailscale\
+C:\Program Files\GitHub CLI\
+C:\Program Files\Cloudflare\Cloudflare WARP\
+C:\Program Files\OpenZFS On Windows
+C:\Program Files\Git\cmd
+C:\Program Files\Microsoft SQL Server\170\Tools\Binn\
+C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\
+C:\flutter\bin
+D:\USER\AppData\Local\Programs\Microsoft VS Code\bin
+C:\Users\SEU-USUARIO\.dotnet\tools
+C:\Program Files (x86)\EaseUS\Todo Backup\bin\x64\
+C:\flutter\bin
+D:\USER\AppData\Local\Programs\Microsoft VS Code\bin
+C:\Users\SEU-USUARIO\.dotnet\tools
+D:\USER\AppData\Local\Programs\DockerDesktop\resources\bin
+D:\USER\AppData\Roaming\npm
+D:\USER\AppData\Local\Microsoft\WinGet\Links

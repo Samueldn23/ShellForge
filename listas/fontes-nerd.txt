@@ -1,0 +1,13 @@
+# Fontes instaladas em arquivos/Hack/ (Hack Nerd Font)
+Hack Nerd Font
+Hack Nerd Font Bold
+Hack Nerd Font Italic
+Hack Nerd Font Bold Italic
+Hack Nerd Font Mono
+Hack Nerd Font Mono Bold
+Hack Nerd Font Mono Italic
+Hack Nerd Font Mono Bold Italic
+Hack Nerd Font Propo
+Hack Nerd Font Propo Bold
+Hack Nerd Font Propo Italic
+Hack Nerd Font Propo Bold Italic

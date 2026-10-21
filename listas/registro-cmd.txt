@@ -1,0 +1,1 @@
+AutoRun=chcp 65001 && "C:\Users\USER\scoop\apps\clink\current\clink.bat" inject --autorun

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# ---------------------------------------------------------------------------
+# ~/.bashrc  --  Git Bash
+#
+# So carrega este arquivo em shells interativos (login ou nao-login).
+# Para shells nao interativos (scripts) nao carrega nada, por performance.
+# ---------------------------------------------------------------------------
+
+# Nao mexe em scripts nao interativos
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# ---------------------------------------------------------------------------
+# Oh My Posh  --  gerenciado pelo Scoop:  scoop update oh-my-posh
+#
+# TEMA ATUAL: ~/.omp/custom.omp.json  (mesmo arquivo do PowerShell e do WSL)
+# Para voltar ao tema empacotado do Scoop:
+#   eval "$(oh-my-posh init bash --config "$HOME/scoop/apps/oh-my-posh/current/themes/powerlevel10k_rainbow.omp.json" --strict)"
+# ---------------------------------------------------------------------------
+eval "$(oh-my-posh init bash --config "$HOME/.omp/custom.omp.json" --strict)"

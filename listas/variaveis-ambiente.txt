@@ -1,0 +1,5 @@
+# Variaveis definidas pelo script (somente documentacao - nao sao lidas pelo script).
+# Os caminhos usam o perfil do usuario atual; ajuste se o Scoop estiver em outro lugar.
+POSH_THEMES_PATH=C:\Users\SEU-USUARIO\scoop\apps\oh-my-posh\current\themes
+CLINK_DIR=C:\Users\SEU-USUARIO\scoop\apps\clink\current
+POWERSHELL_TELEMETRY_OPTOUT=1
