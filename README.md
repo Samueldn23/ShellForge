@@ -253,53 +253,53 @@ ShellForge/
 ### Objective
 
 **ShellForge** is a backup and restore kit for terminal/shell personalization on
-Windows 11. It is not an application — it is a set of configuration files plus a
+Windows 11. It is not an application - it is a set of configuration files plus a
 PowerShell script that reapplies them on another machine.
 
 It restores:
 - **PowerShell 7** and **Windows PowerShell 5.1** profiles (with Oh My Posh)
 - **Git Bash** (`.bashrc`, `.bash_profile`)
-- **WSL** (Ubuntu, OpenClawGateway) — Oh My Posh + theme
-- **CMD via Clink** — prompt customization
-- **Windows Terminal** — settings, font, profiles
-- **Git** — global config, safe directories
-- **Tools** — Scoop, Oh My Posh, Clink, delta, lazygit, fzf, zoxide, jq, git,
+- **WSL** (Ubuntu, OpenClawGateway): Oh My Posh + theme
+- **CMD via Clink**: prompt customization
+- **Windows Terminal**: settings, font, profiles
+- **Git**: global config, safe directories
+- **Tools**: Scoop, Oh My Posh, Clink, delta, lazygit, fzf, zoxide, jq, git,
   7zip, ffmpeg, gradle, nodejs, openjdk21, opencode
-- **Modules** — Terminal-Icons, Posh-Git, PSFzf
-- **Font** — Hack Nerd Font (installed per-user, no admin required)
-- **Environment variables** — PATH, POSH_THEMES_PATH, CLINK_DIR, etc.
+- **Modules**: Terminal-Icons, Posh-Git, PSFzf
+- **Font**: Hack Nerd Font (installed per-user, no admin required)
+- **Environment variables**: PATH, POSH_THEMES_PATH, CLINK_DIR, etc.
 
 ### How it works
 
-1. **Environment check** — confirms PowerShell 7+, tests internet connectivity
+1. **Environment check**: confirms PowerShell 7+, tests internet connectivity
    (github.com:443), and starts a log file in `%TEMP%`.
-2. **Tools** — installs Scoop if missing (renaming any partial installation to
+2. **Tools**: installs Scoop if missing (renaming any partial installation to
    a backup), then installs each app from `listas/scoop-apps.txt`. Already
    installed apps (detected via PATH) are skipped. If Scoop is unavailable,
    falls back to **winget**.
-3. **Modules** — installs only missing PowerShell modules.
-4. **Font** — installs Hack Nerd Font per-user from `arquivos/Hack/` if not
+3. **Modules**: installs only missing PowerShell modules.
+4. **Font**: installs Hack Nerd Font per-user from `arquivos/Hack/` if not
    present.
-5. **Config files** — copies profiles, `.bashrc`, `.gitconfig`,
+5. **Config files**: copies profiles, `.bashrc`, `.gitconfig`,
    `custom.omp.json`, `clink_settings` and `settings-terminal.json` to their
    destinations, with `.bak` backup if they already exist.
-6. **CMD registry** — creates `HKCU\Software\Microsoft\Command Processor` and
+6. **CMD registry**: creates `HKCU\Software\Microsoft\Command Processor` and
    sets the Clink `AutoRun` value.
-7. **Environment** — adjusts `PATH`, `POSH_THEMES_PATH`, `CLINK_DIR` and
+7. **Environment**: adjusts `PATH`, `POSH_THEMES_PATH`, `CLINK_DIR` and
    `POWERSHELL_TELEMETRY_OPTOUT`.
-8. **WSL** — for each existing distro listed in `listas/wsl-distros.txt`,
+8. **WSL**: for each existing distro listed in `listas/wsl-distros.txt`,
    installs Oh My Posh if missing, downloads official themes, writes
    `~/.omp/custom.omp.json` and updates `~/.bashrc` (with backup).
 
 The theme is sent to WSL as **base64** because not every distro mounts Windows
-drives (`/mnt/d`), and Linux is case-sensitive (`/mnt/d` ? `/mnt/D`).
+drives (`/mnt/d`), and Linux is case-sensitive (`/mnt/d` is not `/mnt/D`).
 
 ### Installation
 
 #### Prerequisites
-- **PowerShell 7** — `winget install Microsoft.PowerShell`
-- **Windows Terminal** — included in Windows 11
-- **Git for Windows** — <https://git-scm.com/download/win>
+- **PowerShell 7**: `winget install Microsoft.PowerShell`
+- **Windows Terminal**: included in Windows 11
+- **Git for Windows**: <https://git-scm.com/download/win>
 
 #### Quick start
 ```powershell
