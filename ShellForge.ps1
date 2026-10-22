@@ -20,6 +20,7 @@
     pwsh -File ShellForge.ps1 -Simular
 
     # Instalacao com um comando (requer install.ps1 do repo):
+    # irm https://is.gd/shellforge | iex
     # irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1 | iex
 #>
 

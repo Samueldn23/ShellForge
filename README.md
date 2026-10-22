@@ -38,14 +38,17 @@ só configuração, simulação ou sair). Em pipe/CI (entrada redirecionada) o m
 é pulado e roda a instalação completa.
 
 ```powershell
-# instalação completa (modo padrão):
+# instalação completa (modo padrão) - link curto:
+irm https://is.gd/shellforge | iex
+
+# link completo (caso o encurtador esteja indisponível):
 irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1 | iex
 
 # dry-run (nada é alterado):
-& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1))) -Simular
+& ([ScriptBlock]::Create((irm https://is.gd/shellforge))) -Simular
 
 # só arquivos de configuração:
-& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1))) -SomenteConfig
+& ([ScriptBlock]::Create((irm https://is.gd/shellforge))) -SomenteConfig
 ```
 
 > **Segurança:** `irm ... | iex` executa código baixado da internet. Revise o
