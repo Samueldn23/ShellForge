@@ -1,7 +1,7 @@
 # ShellForge - Git ignore
 # Configurações gerais para evitar commitar arquivos temporários e locais
 
-# Arquivos de backup criados pelo script restaurar.ps1
+# Arquivos de backup criados pelo script ShellForge.ps1
 *.bak.*
 *.backup
 

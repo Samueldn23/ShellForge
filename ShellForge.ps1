@@ -15,9 +15,9 @@
     Mostra o que seria feito, sem alterar nada.
 
 .EXAMPLE
-    pwsh -File restaurar.ps1
-    pwsh -File restaurar.ps1 -SomenteConfig
-    pwsh -File restaurar.ps1 -Simular
+    pwsh -File ShellForge.ps1
+    pwsh -File ShellForge.ps1 -SomenteConfig
+    pwsh -File ShellForge.ps1 -Simular
 #>
 
 [CmdletBinding()]
@@ -160,7 +160,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
     # Reinicia o proprio script usando o PowerShell 7 recem instalado
     $scriptPath = $PSScriptRoot
-    $scriptFile = Join-Path $scriptPath 'restaurar.ps1'
+    $scriptFile = Join-Path $scriptPath 'ShellForge.ps1'
 
     # Verifica se precisamos de administrador (para gravação em HKCR, por exemplo)
     $precisaAdmin = $false
