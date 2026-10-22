@@ -579,25 +579,29 @@ if ($Simular) {
         # Caminho do ícone com índice (o PowerShell 7 tem o ícone azul no índice 0 do executável)
         $iconePwsh = $pwshExe + ',0'
 
-        # Directory (pastas)
-        $regDir = 'HKCR:\Directory\shell\PowerShell7'
-        if (-not (Test-Path $regDir)) { New-Item -Path $regDir -Force | Out-Null }
-        Set-ItemProperty -Path $regDir -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
-        Set-ItemProperty -Path $regDir -Name 'Icon' -Value $iconePwsh -Type String -Force
-        Set-ItemProperty -Path $regDir -Name 'Position' -Value 'Bottom' -Type String -Force
-        New-Item -Path "$regDir\command" -Force | Out-Null
-        Set-ItemProperty -Path "$regDir\command" -Name '' -Value $comando -Type String -Force
+        try {
+            # Directory (pastas)
+            $regDir = 'HKCR:\Directory\shell\PowerShell7'
+            if (-not (Test-Path $regDir)) { New-Item -Path $regDir -Force | Out-Null }
+            Set-ItemProperty -Path $regDir -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
+            Set-ItemProperty -Path $regDir -Name 'Icon' -Value $iconePwsh -Type String -Force
+            Set-ItemProperty -Path $regDir -Name 'Position' -Value 'Bottom' -Type String -Force
+            New-Item -Path "$regDir\command" -Force | Out-Null
+            Set-ItemProperty -Path "$regDir\command" -Name '' -Value $comando -Type String -Force
 
-        # Drive (unidades)
-        $regDrv = 'HKCR:\Drive\shell\PowerShell7'
-        if (-not (Test-Path $regDrv)) { New-Item -Path $regDrv -Force | Out-Null }
-        Set-ItemProperty -Path $regDrv -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
-        Set-ItemProperty -Path $regDrv -Name 'Icon' -Value $iconePwsh -Type String -Force
-        Set-ItemProperty -Path $regDrv -Name 'Position' -Value 'Bottom' -Type String -Force
-        New-Item -Path "$regDrv\command" -Force | Out-Null
-        Set-ItemProperty -Path "$regDrv\command" -Name '' -Value $comando -Type String -Force
+            # Drive (unidades)
+            $regDrv = 'HKCR:\Drive\shell\PowerShell7'
+            if (-not (Test-Path $regDrv)) { New-Item -Path $regDrv -Force | Out-Null }
+            Set-ItemProperty -Path $regDrv -Name 'MUIVerb' -Value 'Abrir com PowerShell 7' -Type String -Force
+            Set-ItemProperty -Path $regDrv -Name 'Icon' -Value $iconePwsh -Type String -Force
+            Set-ItemProperty -Path $regDrv -Name 'Position' -Value 'Bottom' -Type String -Force
+            New-Item -Path "$regDrv\command" -Force | Out-Null
+            Set-ItemProperty -Path "$regDrv\command" -Name '' -Value $comando -Type String -Force
 
-        Ok "PowerShell 7 adicionado ao menu de contexto do Explorer"
+            Ok "PowerShell 7 adicionado ao menu de contexto do Explorer"
+        } catch {
+            Aviso "Falha ao configurar menu de contexto: $($_.Exception.Message)"
+        }
     }
 }
 
