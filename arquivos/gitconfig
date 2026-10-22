@@ -2,9 +2,6 @@
 	editor = code --wait
 	fsmonitor = true
 	pager = delta
-[safe]
-	directory = D:/USER/Dev/traduzir_csv
-	directory = A:/Desenvolvimento/Retail_S
 [windows]
 	appendAtomically = false
 [credential "helperselector"]
@@ -17,10 +14,7 @@
 	prune = true
 [push]
 	autoSetupRemote = true
-[interactive]
-	diffFilter = delta --diff-filter=color-moved --paging=never
 [delta]
 	line-numbers = true
-	sidebar = true
 	navigate = true
 	dark = light
