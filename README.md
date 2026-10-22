@@ -113,7 +113,7 @@ sÃ³ entÃ£o substitui. Pode rodar quantas vezes quiser.
 ### Registro e ambiente
 
 - `HKCU\Software\Microsoft\Command Processor\AutoRun` â†’ `chcp 65001 && clink inject --autorun`
-- `HKCR\Directory\shell\PowerShell7` e `HKCR\Drive\shell\PowerShell7` â†’ menu de contexto "Abrir com PowerShell 7"
+- `HKCR\Directory\shell\PowerShell7` e `HKCR\Drive\shell\PowerShell7` â†’ menu de contexto "Abrir com PowerShell 7" (com Ã­cone do PowerShell 7)
 - `POSH_THEMES_PATH`, `CLINK_DIR`, `POWERSHELL_TELEMETRY_OPTOUT=1`
 - entrada `scoop\shims` no PATH do usuÃ¡rio
 - `defaultProfile` do Windows Terminal â†’ GUID do PowerShell 7
