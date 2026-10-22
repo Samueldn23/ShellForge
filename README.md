@@ -26,6 +26,32 @@ pwsh -File ShellForge.ps1 -SomenteConfig
 pwsh -File ShellForge.ps1
 ```
 
+### Instalação com um comando (estilo `irm ... | iex`)
+
+O repo é multi-arquivo (perfis, temas, fontes, listas, script WSL), então não
+basta baixar só o `ShellForge.ps1`. O `install.ps1` do repo baixa o repositório
+inteiro e executa o script:
+
+Se rodado num terminal interativo sem parâmetros, o `install.ps1` (e o próprio
+`ShellForge.ps1`) exibem um **menu** para escolher o modo (instalação completa,
+só configuração, simulação ou sair). Em pipe/CI (entrada redirecionada) o menu
+é pulado e roda a instalação completa.
+
+```powershell
+# instalação completa (modo padrão):
+irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1 | iex
+
+# dry-run (nada é alterado):
+& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1))) -Simular
+
+# só arquivos de configuração:
+& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1))) -SomenteConfig
+```
+
+> **Segurança:** `irm ... | iex` executa código baixado da internet. Revise o
+> `install.ps1` antes de rodar. O script é idempotente e grava `.bak` dos
+> arquivos originais.
+
 O script é **idempotente**: pode ser rodado quantas vezes quiser. Nada é
 sobrescrito às cegas — cada arquivo é comparado por SHA256 e o original é
 guardado como `.bak.<aaaaMMdd-HHmmss>` antes de ser substituído.

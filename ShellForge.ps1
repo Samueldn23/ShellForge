@@ -18,6 +18,9 @@
     pwsh -File ShellForge.ps1
     pwsh -File ShellForge.ps1 -SomenteConfig
     pwsh -File ShellForge.ps1 -Simular
+
+    # Instalacao com um comando (requer install.ps1 do repo):
+    # irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1 | iex
 #>
 
 [CmdletBinding()]
@@ -191,6 +194,110 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
     # Sai do script atual (Windows PowerShell 5.1) apos lançar o pwsh
     exit 0
+}
+
+# --- Funcao: menu grafico (WPF), estilo winutil -------------------------------
+function Show-ShellForgeMenuWpf {
+    $xaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ShellForge" Height="340" Width="540"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#1E1E2E">
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <TextBlock Grid.Row="0" Text="ShellForge" FontSize="24" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,2"/>
+    <TextBlock Grid.Row="1" Text="Personalizacao do shell - escolha o modo de instalacao" Foreground="#CDD6F4" Margin="0,0,0,16" FontSize="12"/>
+    <StackPanel Grid.Row="2">
+      <RadioButton x:Name="rbFull" IsChecked="True" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
+        <TextBlock Text="Instalacao completa (Scoop, modulos, fonte, configs, WSL)"/>
+      </RadioButton>
+      <RadioButton x:Name="rbConfig" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
+        <TextBlock Text="Somente configuracao (pula Scoop/modulos/fonte, aplica WSL)"/>
+      </RadioButton>
+      <RadioButton x:Name="rbSim" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
+        <TextBlock Text="Simulacao (dry-run: mostra tudo, nao altera nada)"/>
+      </RadioButton>
+    </StackPanel>
+    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="btnCancel" Content="Cancelar" Width="100" Margin="0,0,10,0" Padding="8,5"/>
+      <Button x:Name="btnRun" Content="Executar" Width="100" Padding="8,5" IsDefault="True" Background="#89B4FA" Foreground="#1E1E2E" FontWeight="Bold"/>
+    </StackPanel>
+  </Grid>
+</Window>
+'@
+    try {
+        $x = [xml]$xaml
+        $reader = New-Object System.Xml.XmlNodeReader $x
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+    } catch { return $null }
+
+    $rbFull    = $window.FindName('rbFull')
+    $rbConfig  = $window.FindName('rbConfig')
+    $rbSim     = $window.FindName('rbSim')
+    $btnRun    = $window.FindName('btnRun')
+    $btnCancel = $window.FindName('btnCancel')
+
+    $state = [hashtable]::Synchronized(@{ Result = $null })
+    $btnRun.Add_Click({
+        if ($rbFull.IsChecked)        { $state.Result = 'Full' }
+        elseif ($rbConfig.IsChecked)  { $state.Result = 'Config' }
+        elseif ($rbSim.IsChecked)     { $state.Result = 'Sim' }
+        $window.Close()
+    }.GetNewClosure())
+    $btnCancel.Add_Click({ $window.Close() }.GetNewClosure())
+
+    $window.ShowDialog() | Out-Null
+    if ($null -eq $state.Result) { return 'Cancel' }
+    return $state.Result
+}
+
+# --- Menu (WPF se disponivel, senao texto) ------------------------------------
+$wpfOk = $false
+try {
+    Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+    Add-Type -AssemblyName PresentationCore       -ErrorAction Stop
+    Add-Type -AssemblyName WindowsBase           -ErrorAction Stop
+    $wpfOk = $true
+} catch { $wpfOk = $false }
+
+if (-not $SomenteConfig -and -not $Simular -and -not [Console]::IsInputRedirected) {
+    if ($wpfOk) {
+        $choice = Show-ShellForgeMenuWpf
+        if ($choice -eq 'Cancel' -or $null -eq $choice) {
+            Write-Host 'Cancelado.' -ForegroundColor Yellow
+            exit 0
+        }
+        switch ($choice) {
+            'Config' { $SomenteConfig = $true }
+            'Sim'    { $Simular       = $true }
+        }
+    } else {
+        Write-Host ''
+        Write-Host '===========================================================' -ForegroundColor Cyan
+        Write-Host '  ShellForge - escolha o modo de instalacao' -ForegroundColor Cyan
+        Write-Host '===========================================================' -ForegroundColor Cyan
+        Write-Host '  1. Instalacao completa (Scoop, modulos, fonte, configs, WSL)'
+        Write-Host '  2. Somente configuracao (pula Scoop/modulos/fonte, aplica WSL)'
+        Write-Host '  3. Simulacao (dry-run: mostra tudo, nao altera nada)'
+        Write-Host '  4. Sair'
+        Write-Host '===========================================================' -ForegroundColor Cyan
+        do {
+            $escolha = Read-Host 'Opcao [1-4] (padrao: 1)'
+            if ([string]::IsNullOrWhiteSpace($escolha)) { $escolha = '1' }
+        } while ($escolha -notin @('1','2','3','4'))
+        switch ($escolha) {
+            '2' { $SomenteConfig = $true }
+            '3' { $Simular       = $true }
+            '4' { Write-Host 'Cancelado.' -ForegroundColor Yellow; exit 0 }
+        }
+        Write-Host ''
+    }
 }
 
 # Log de execucao em arquivo (facilita depuracao em outra maquina)
