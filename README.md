@@ -1,100 +1,100 @@
-﻿# ShellForge â€” Backup e restauraÃ§Ã£o da personalizaÃ§Ã£o do shell
+# ShellForge — Backup e restauração da personalização do shell
 
-Kit de backup/restauraÃ§Ã£o da personalizaÃ§Ã£o do terminal de uma mÃ¡quina
-**Windows 11** â€” feito para ser **levado para outro PC** e reaplicado com um
+Kit de backup/restauração da personalização do terminal de uma máquina
+**Windows 11** — feito para ser **levado para outro PC** e reaplicado com um
 comando. PowerShell 7, Windows PowerShell 5.1, Windows Terminal, WSL2,
 Git Bash e CMD via Clink, todos com o prompt do Oh My Posh (o CMD usa o tema
-empacotado; os demais, o tema `custom.omp.json` â€” veja abaixo).
+empacotado; os demais, o tema `custom.omp.json` — veja abaixo).
 
-> **NÃ£o Ã© uma aplicaÃ§Ã£o.** Este repo nÃ£o tem build, testes, dependÃªncias ou CI.
-> A peÃ§a central Ã© o script `ShellForge.ps1`.
+> **Não é uma aplicação.** Este repo não tem build, testes, dependências ou CI.
+> A peça central é o script `ShellForge.ps1`.
 
 ---
 
 ## Quick start
 
-No **PowerShell 7** da mÃ¡quina nova, dentro da pasta do repo:
+No **PowerShell 7** da máquina nova, dentro da pasta do repo:
 
 ```powershell
 # 1. veja o que vai acontecer, sem alterar nada:
 pwsh -File ShellForge.ps1 -Simular
 
-# 2. sÃ³ os arquivos de configuraÃ§Ã£o (nÃ£o instala Scoop, mÃ³dulos nem fonte):
+# 2. só os arquivos de configuração (não instala Scoop, módulos nem fonte):
 pwsh -File ShellForge.ps1 -SomenteConfig
 
-# 3. instalaÃ§Ã£o completa:
+# 3. instalação completa:
 pwsh -File ShellForge.ps1
 ```
 
-O script Ã© **idempotente**: pode ser rodado quantas vezes quiser. Nada Ã©
-sobrescrito Ã s cegas â€” cada arquivo Ã© comparado por SHA256 e o original Ã©
-guardado como `.bak.<aaaaMMdd-HHmmss>` antes de ser substituÃ­do.
+O script é **idempotente**: pode ser rodado quantas vezes quiser. Nada é
+sobrescrito às cegas — cada arquivo é comparado por SHA256 e o original é
+guardado como `.bak.<aaaaMMdd-HHmmss>` antes de ser substituído.
 
-Antes de instalar ferramentas, o script **verifica a conexÃ£o com a internet**
-(github.com:443) e **pula o que jÃ¡ estiver instalado**. Cada execuÃ§Ã£o gera um
+Antes de instalar ferramentas, o script **verifica a conexão com a internet**
+(github.com:443) e **pula o que já estiver instalado**. Cada execução gera um
 **log** em `%TEMP%\ShellForge-<data-hora>.log`.
 
-### PrÃ©-requisitos na mÃ¡quina nova
+### Pré-requisitos na máquina nova
 
 | Precisa | Como |
 |---|---|
-| **PowerShell 7** | Instalado automaticamente via winget (`Microsoft.PowerShell`) se nÃ£o estiver presente |
+| **PowerShell 7** | Instalado automaticamente via winget (`Microsoft.PowerShell`) se não estiver presente |
 | **Scoop** | O script tenta instalar automaticamente se faltar.<br>Manual: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`<br>`Invoke-RestMethod -Uri https://get.scoop.sh \| Invoke-Expression` |
-| **Hack Nerd Font** | O script instala automaticamente as fontes de `arquivos/Hack/`. Manual: <https://github.com/ryanoasis/nerd-fonts/releases> â†’ **HackNerdFont-Regular.ttf** |
-| **Windows Terminal** | vem no Windows 11; em versÃµes antigas, pela Store |
-| **Git for Windows** | <https://git-scm.com/download/win> â€” fornece `bash.exe`, `less`, `tig`, `grep` |
+| **Hack Nerd Font** | O script instala automaticamente as fontes de `arquivos/Hack/`. Manual: <https://github.com/ryanoasis/nerd-fonts/releases> → **HackNerdFont-Regular.ttf** |
+| **Windows Terminal** | vem no Windows 11; em versões antigas, pela Store |
+| **Git for Windows** | <https://git-scm.com/download/win> — fornece `bash.exe`, `less`, `tig`, `grep` |
 
-> **A fonte Ã© obrigatÃ³ria.** Sem uma fonte Nerd (Hack) todos os Ã­cones do prompt
+> **A fonte é obrigatória.** Sem uma fonte Nerd (Hack) todos os ícones do prompt
 > viram quadradinhos. O script instala a Hack Nerd Font automaticamente.
 
 ---
 
 ## Como funciona
 
-O ShellForge Ã© um kit de **backup e restauraÃ§Ã£o** da personalizaÃ§Ã£o do terminal.
-Ele nÃ£o instala um aplicativo â€” ele **copia arquivos de configuraÃ§Ã£o e
-reinstala ferramentas** de um backup para a mÃ¡quina atual.
+O ShellForge é um kit de **backup e restauração** da personalização do terminal.
+Ele não instala um aplicativo — ele **copia arquivos de configuração e
+reinstala ferramentas** de um backup para a máquina atual.
 
-### Fluxo de restauraÃ§Ã£o (`ShellForge.ps1`)
+### Fluxo de restauração (`ShellForge.ps1`)
 
-1. **VerificaÃ§Ã£o de ambiente** â€” confirma PowerShell 7+, verifica a
+1. **Verificação de ambiente** — confirma PowerShell 7+, verifica a
    `Execution Policy` do PowerShell (se estiver `Restricted`, explica como
    habilitar com `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`),
-   testa conexÃ£o com a internet (github.com:443) e registra um log em
+   testa conexão com a internet (github.com:443) e registra um log em
    `%TEMP%`.
-2. **Ferramentas** â€” instala o Scoop (se faltar) e os apps de
+2. **Ferramentas** — instala o Scoop (se faltar) e os apps de
    `listas/scoop-apps.txt` (oh-my-posh, clink, delta, lazygit, fzf, zoxide,
    jq, git, 7zip, ffmpeg, gradle, nodejs, openjdk21, opencode). Se o Scoop
-   nÃ£o estiver disponÃ­vel, tenta via **winget**. Apps jÃ¡ instalados sÃ£o
+   não estiver disponível, tenta via **winget**. Apps já instalados são
    detectados pelo PATH e pulados.
-3. **MÃ³dulos do PowerShell** â€” Terminal-Icons, Posh-Git, PSFzf (sÃ³ os que
+3. **Módulos do PowerShell** — Terminal-Icons, Posh-Git, PSFzf (só os que
    faltarem).
-4. **Fonte Nerd** â€” instala a Hack Nerd Font por usuÃ¡rio (sem admin) a partir
-   de `arquivos/Hack/`, se nÃ£o estiver instalada.
-5. **Arquivos de configuraÃ§Ã£o** â€” copia perfis, `.bashrc`, `.gitconfig`,
+4. **Fonte Nerd** — instala a Hack Nerd Font por usuário (sem admin) a partir
+   de `arquivos/Hack/`, se não estiver instalada.
+5. **Arquivos de configuração** — copia perfis, `.bashrc`, `.gitconfig`,
    `custom.omp.json`, `clink_settings` e `settings-terminal.json` para seus
-   destinos, com backup `.bak` se jÃ¡ existirem.
-6. **Registro do CMD** â€” cria a chave `HKCU\Software\Microsoft\Command
+   destinos, com backup `.bak` se já existirem.
+6. **Registro do CMD** — cria a chave `HKCU\Software\Microsoft\Command
    Processor` e grava o `AutoRun` do Clink (se instalado).
-7. **VariÃ¡veis de ambiente** â€” ajusta `PATH`, `POSH_THEMES_PATH`, `CLINK_DIR`
+7. **Variáveis de ambiente** — ajusta `PATH`, `POSH_THEMES_PATH`, `CLINK_DIR`
    e `POWERSHELL_TELEMETRY_OPTOUT`.
-8. **WSL** â€” para cada distro existente (listada em `listas/wsl-distros.txt`),
+8. **WSL** — para cada distro existente (listada em `listas/wsl-distros.txt`),
    instala o oh-my-posh (se faltar), baixa os temas, grava
    `~/.omp/custom.omp.json` e atualiza o `~/.bashrc` (com backup).
 
 ### Por que um arquivo de tema em base64 no WSL?
 Nem toda distro WSL monta os drives do Windows (`/mnt/d`), e o Linux diferencia
-maiÃºscula de minÃºscula (`/mnt/d` â‰  `/mnt/D`). Por isso o tema viaja como
-base64 pelo argumento do script, e nÃ£o por caminho.
+maiúscula de minúscula (`/mnt/d` ≠ `/mnt/D`). Por isso o tema viaja como
+base64 pelo argumento do script, e não por caminho.
 
-### IdempotÃªncia
-O script compara SHA256 antes de copiar. Se o arquivo jÃ¡ estiver igual, nÃ£o
+### Idempotência
+O script compara SHA256 antes de copiar. Se o arquivo já estiver igual, não
 faz nada. Se for diferente, grava um `.bak.<aaaaMMdd-HHmmss>` do original e
-sÃ³ entÃ£o substitui. Pode rodar quantas vezes quiser.
+só então substitui. Pode rodar quantas vezes quiser.
 
 ---
 
-## O que Ã© restaurado
+## O que é restaurado
 
 ### Arquivos
 
@@ -108,37 +108,37 @@ sÃ³ entÃ£o substitui. Pode rodar quantas vezes quiser.
 | `arquivos/gitconfig` | `%USERPROFILE%\.gitconfig` |
 | `arquivos/settings-terminal.json` | `%LOCALAPPDATA%\Packages\...\LocalState\settings.json` |
 | `arquivos/clink_settings` | `%LOCALAPPDATA%\clink\clink_settings` |
-| `arquivos/wsl-*.bashrc` | referÃªncia de como ficou cada distro |
+| `arquivos/wsl-*.bashrc` | referência de como ficou cada distro |
 
 ### Registro e ambiente
 
-- `HKCU\Software\Microsoft\Command Processor\AutoRun` â†’ `chcp 65001 && clink inject --autorun`
-- `HKCR\Directory\shell\PowerShell7` e `HKCR\Drive\shell\PowerShell7` â†’ menu de contexto "Abrir com PowerShell 7" (com Ã­cone do PowerShell 7)
+- `HKCU\Software\Microsoft\Command Processor\AutoRun` → `chcp 65001 && clink inject --autorun`
+- `HKCR\Directory\shell\PowerShell7` e `HKCR\Drive\shell\PowerShell7` → menu de contexto "Abrir com PowerShell 7" (com ícone do PowerShell 7)
 - `POSH_THEMES_PATH`, `CLINK_DIR`, `POWERSHELL_TELEMETRY_OPTOUT=1`
-- entrada `scoop\shims` no PATH do usuÃ¡rio
-- `defaultProfile` do Windows Terminal â†’ GUID do PowerShell 7
+- entrada `scoop\shims` no PATH do usuário
+- `defaultProfile` do Windows Terminal → GUID do PowerShell 7
 
 ### Ferramentas
 
-- **Scoop** â€” `listas/scoop-apps.txt`: oh-my-posh, clink, delta, lazygit, fzf,
-  zoxide, jq, git, 7zip, ffmpeg, gradle, nodejs, openjdk21, opencode, â€¦
-  O script tenta instalar o **Scoop** automaticamente se faltar. Se a instalaÃ§Ã£o
+- **Scoop** — `listas/scoop-apps.txt`: oh-my-posh, clink, delta, lazygit, fzf,
+  zoxide, jq, git, 7zip, ffmpeg, gradle, nodejs, openjdk21, opencode, …
+  O script tenta instalar o **Scoop** automaticamente se faltar. Se a instalação
   do Scoop falhar, ele tenta instalar os apps equivalentes via **winget**
-  (gradle e openjdk21 nÃ£o tÃªm equivalente; o script indica o link manual).
-  Antes de instalar qualquer app, o script **verifica se o comando jÃ¡ existe
-  no PATH** e pula o que jÃ¡ estiver instalado.
-- **Chocolatey** â€” `listas/choco-packages.txt`: VS Build Tools, Python, runtimes, KBs.
-  **NÃ£o Ã© reinstalado pelo script**: exige administrador e baixa mais de 2 GB.
+  (gradle e openjdk21 não têm equivalente; o script indica o link manual).
+  Antes de instalar qualquer app, o script **verifica se o comando já existe
+  no PATH** e pula o que já estiver instalado.
+- **Chocolatey** — `listas/choco-packages.txt`: VS Build Tools, Python, runtimes, KBs.
+  **Não é reinstalado pelo script**: exige administrador e baixa mais de 2 GB.
   Instale com `choco install <pacote> -y` se precisar.
-- **MÃ³dulos do PowerShell** â€” Terminal-Icons, Posh-Git, PSFzf. O script sÃ³
+- **Módulos do PowerShell** — Terminal-Icons, Posh-Git, PSFzf. O script só
   instala os que faltarem.
-- **Fonte Hack Nerd Font** â€” instalada automaticamente a partir de `arquivos/Hack/`
-  (por usuÃ¡rio, sem precisar de admin).
+- **Fonte Hack Nerd Font** — instalada automaticamente a partir de `arquivos/Hack/`
+  (por usuário, sem precisar de admin).
 
 ### WSL
 
-O script **nÃ£o reinstala as distros** (elas podem ter gigabytes). Ele apenas,
-para cada distro que jÃ¡ existir na mÃ¡quina nova:
+O script **não reinstala as distros** (elas podem ter gigabytes). Ele apenas,
+para cada distro que já existir na máquina nova:
 
 1. instala o `oh-my-posh` em `~/.local/bin` (se faltar)
 2. baixa os temas oficiais
@@ -146,8 +146,8 @@ para cada distro que jÃ¡ existir na mÃ¡quina nova:
 4. acrescenta o bloco no `~/.bashrc` (com backup do original)
 5. verifica que o prompt renderiza sem erro
 
-O tema Ã© enviado em **base64**, nÃ£o por caminho `/mnt/...`, porque nem toda
-distro monta os drives do Windows e no Linux `/mnt/d` â‰  `/mnt/D`.
+O tema é enviado em **base64**, não por caminho `/mnt/...`, porque nem toda
+distro monta os drives do Windows e no Linux `/mnt/d` ≠ `/mnt/D`.
 
 ---
 
@@ -155,24 +155,24 @@ distro monta os drives do Windows e no Linux `/mnt/d` â‰  `/mnt/D`.
 
 ### O caminho do *Documents* pode ser diferente
 
-Na mÃ¡quina de origem o *Documents* estÃ¡ redirecionado para `D:\USER\Documents`.
-O script usa `[Environment]::GetFolderPath('MyDocuments')`, entÃ£o acha o caminho
-certo sozinho em qualquer mÃ¡quina.
+Na máquina de origem o *Documents* está redirecionado para `D:\USER\Documents`.
+O script usa `[Environment]::GetFolderPath('MyDocuments')`, então acha o caminho
+certo sozinho em qualquer máquina.
 
-**ConsequÃªncia prÃ¡tica:** num PC com o *Documents* redirecionado, editar os
-perfis em `C:\Users\<usuÃ¡rio>\Documents\PowerShell\...` nÃ£o surte efeito nenhum.
+**Consequência prática:** num PC com o *Documents* redirecionado, editar os
+perfis em `C:\Users\<usuário>\Documents\PowerShell\...` não surte efeito nenhum.
 
 ### `gitconfig` traz identidade
 
-Inclui `user.name`, `user.email` e `safe.directory` da mÃ¡quina de origem. Se na
-outra mÃ¡quina usar outra identidade:
+Inclui `user.name`, `user.email` e `safe.directory` da máquina de origem. Se na
+outra máquina usar outra identidade:
 
 ```powershell
 git config --global user.name  "Outro Nome"
 git config --global user.email "outro@email.com"
 ```
 
-O `core.editor` aponta para o caminho absoluto do VS Code da mÃ¡quina de origem.
+O `core.editor` aponta para o caminho absoluto do VS Code da máquina de origem.
 Se na outra for diferente:
 
 ```powershell
@@ -181,19 +181,19 @@ git config --global core.editor "code --wait"
 
 ### `settings-terminal.json` tem GUIDs e caminhos fixos
 
-- Os GUIDs dos perfis sÃ£o da mÃ¡quina de origem e serÃ£o preservados.
-- O perfil **Git Bash** aponta para `C:\Program Files\Git\bin\bash.exe` â€” o mesmo
-  caminho na maioria das mÃ¡quinas, mas confira se o seu Git foi instalado ali.
-- Se o Windows Terminal nÃ£o aceitar o arquivo (por exemplo, se os perfis
-  dinÃ¢micos mudarem de GUID), aplique manualmente: *ConfiguraÃ§Ãµes â†’ Abrir
-  arquivo JSON* e cole o conteÃºdo de `arquivos/settings-terminal.json`.
+- Os GUIDs dos perfis são da máquina de origem e serão preservados.
+- O perfil **Git Bash** aponta para `C:\Program Files\Git\bin\bash.exe` — o mesmo
+  caminho na maioria das máquinas, mas confira se o seu Git foi instalado ali.
+- Se o Windows Terminal não aceitar o arquivo (por exemplo, se os perfis
+  dinâmicos mudarem de GUID), aplique manualmente: *Configurações → Abrir
+  arquivo JSON* e cole o conteúdo de `arquivos/settings-terminal.json`.
 
 ### Um tema, quatro shells
 
-`custom.omp.json` Ã© usado pelo PowerShell 7, pelo Windows PowerShell 5.1, pelo
-Git Bash e por ambas as distros WSL. JÃ¡ o `arquivos/clink_settings` ainda aponta
-para o tema empacotado `powerlevel10k_rainbow.omp.json` â€” o CMD via Clink
-**nÃ£o** segue o `custom.omp.json`. Editar o tema nÃ£o muda o CMD.
+`custom.omp.json` é usado pelo PowerShell 7, pelo Windows PowerShell 5.1, pelo
+Git Bash e por ambas as distros WSL. Já o `arquivos/clink_settings` ainda aponta
+para o tema empacotado `powerlevel10k_rainbow.omp.json` — o CMD via Clink
+**não** segue o `custom.omp.json`. Editar o tema não muda o CMD.
 
 Para voltar ao tema empacotado do Scoop nos outros shells, troque a linha do
 tema no perfil correspondente por:
@@ -202,27 +202,27 @@ tema no perfil correspondente por:
 $OmpTheme = Join-Path $env:POSH_THEMES_PATH 'powerlevel10k_rainbow.omp.json'
 ```
 
-### `-SomenteConfig` tambÃ©m mexe no WSL
+### `-SomenteConfig` também mexe no WSL
 
-Apesar do nome, o modo `-SomenteConfig` pula Scoop, mÃ³dulos e fonte, mas
-**continua aplicando todas as distros WSL** â€” instalando o oh-my-posh dentro
-delas. NÃ£o existe guarda para a etapa `[7/7]`.
+Apesar do nome, o modo `-SomenteConfig` pula Scoop, módulos e fonte, mas
+**continua aplicando todas as distros WSL** — instalando o oh-my-posh dentro
+delas. Não existe guarda para a etapa `[7/7]`.
 
 ---
 
 ## Depois de restaurar
 
-1. **Abra um terminal novo.** PATH e variÃ¡veis de ambiente sÃ³ chegam a
+1. **Abra um terminal novo.** PATH e variáveis de ambiente só chegam a
    processos criados depois.
-2. Confira a fonte nas configuraÃ§Ãµes do terminal.
-3. Se o prompt aparecer sem Ã­cones, Ã© a fonte.
-4. Se o CMD ficar sem prompt, o Clink nÃ£o injetou:
+2. Confira a fonte nas configurações do terminal.
+3. Se o prompt aparecer sem ícones, é a fonte.
+4. Se o CMD ficar sem prompt, o Clink não injetou:
 
    ```cmd
    clink autorun install
    ```
 
-5. Teste rÃ¡pido do tema:
+5. Teste rápido do tema:
 
    ```powershell
    oh-my-posh print primary --config "$env:USERPROFILE\.omp\custom.omp.json"
@@ -239,18 +239,19 @@ Para desfazer, procure e renomeie de volta.
 
 ```
 ShellForge/
-â”œâ”€â”€ README.md                  este arquivo
-â”œâ”€â”€ AGENTS.md                  instruÃ§Ãµes para agentes de IA
-â”œâ”€â”€ ShellForge.ps1              script principal (Windows)
-â”œâ”€â”€ arquivos/                  os arquivos de configuraÃ§Ã£o
-â”œâ”€â”€ listas/                    inventÃ¡rio do que estÃ¡ instalado
-â””â”€â”€ scripts/
-    â””â”€â”€ restaurar-wsl.sh       usado pelo ShellForge.ps1 dentro de cada distro
+├── README.md                  este arquivo
+├── AGENTS.md                  instruções para agentes de IA
+├── ShellForge.ps1              script principal (Windows)
+├── arquivos/                  os arquivos de configuração
+├── listas/                    inventário do que está instalado
+└── scripts/
+    └── restaurar-wsl.sh       usado pelo ShellForge.ps1 dentro de cada distro
 ```
 
-> SÃ³ `listas/scoop-apps.txt` e `listas/wsl-distros.txt` sÃ£o lidos pelo script.
-> Os outros arquivos de `listas/` e os `arquivos/wsl-*.bashrc` sÃ£o **sÃ³
-> documentaÃ§Ã£o** â€” editÃ¡-los nÃ£o muda comportamento algum.
+> Só `listas/scoop-apps.txt` e `listas/wsl-distros.txt` são lidos pelo script.
+> Os outros arquivos de `listas/` e os `arquivos/wsl-*.bashrc` são **só
+> documentação** — editá-los não muda comportamento algum.
+
 ---
 
 ## English
