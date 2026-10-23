@@ -19,9 +19,12 @@ color 0A
 
 :: --- 1. Localiza o pwsh.exe --------------------------------------------------
 set "PWSH="
-where pwsh >nul 2>&1
-if not errorlevel 1 (
-    for /f "delims=" %%P in ('where pwsh') do set "PWSH=%%P" & goto :foundPwsh
+:: Filtra a saida do 'where' para ignorar mensagens do console (ex.: "Pagina de
+:: codigo ativa: 65001") e capturar apenas linhas que contenham pwsh.exe.
+where pwsh 2>nul | findstr /i /l "pwsh.exe" > "%TEMP%\_sf_pwsh.txt"
+if exist "%TEMP%\_sf_pwsh.txt" (
+    for /f "usebackq delims=" %%P in ("%TEMP%\_sf_pwsh.txt") do ( set "PWSH=%%P" & goto :foundPwsh )
+    del "%TEMP%\_sf_pwsh.txt" 2>nul
 )
 :: Tenta caminhos conhecidos do PowerShell 7
 for %%C in (
@@ -69,6 +72,9 @@ if not exist "%SCRIPT%" (
     pause
     exit /b 1
 )
+
+:: --- 2b. Garante ExecutionPolicy (RemoteSigned) para o usuario ---------------
+"%PWSH%" -NoProfile -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force" >nul 2>&1
 
 :: --- 3. Repassa os argumentos e executa --------------------------------------
 set "ARGS="

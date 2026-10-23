@@ -17,9 +17,10 @@ color 0A
 
 :: --- 1. Localiza o pwsh.exe --------------------------------------------------
 set "PWSH="
-where pwsh >nul 2>&1
-if not errorlevel 1 (
-    for /f "delims=" %%P in ('where pwsh') do set "PWSH=%%P" & goto :foundPwsh
+where pwsh 2>nul | findstr /i /l "pwsh.exe" > "%TEMP%\_sf_pwsh.txt"
+if exist "%TEMP%\_sf_pwsh.txt" (
+    for /f "usebackq delims=" %%P in ("%TEMP%\_sf_pwsh.txt") do ( set "PWSH=%%P" & goto :foundPwsh )
+    del "%TEMP%\_sf_pwsh.txt" 2>nul
 )
 for %%C in (
     "%ProgramFiles%\PowerShell\7\pwsh.exe"
