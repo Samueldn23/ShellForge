@@ -1,16 +1,9 @@
-7zip|26.02|main
 clink|1.9.34|main
 delta|0.20.1|main
-ffmpeg|9.0.1|main
 fzf|0.74.4|main
 git|2.55.0.5|main
-gradle|9.8.1|main
-jq|1.8.2|main
 lazygit|0.66.0|extras
-nodejs|26.1.0|main
 oh-my-posh|31.6.0|main
-opencode|1.19.0|main
-openjdk21|21.0.2-13|java
 scoop-search|2.1.0|main
 winget|1.29.290|main
 zoxide|0.10.0|main

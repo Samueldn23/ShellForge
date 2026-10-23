@@ -36,17 +36,13 @@ $arquivos = Join-Path $raiz 'arquivos'
 $listas = Join-Path $raiz 'listas'
 
 # Mapa de apps Scoop para IDs do winget (usado quando o Scoop nao esta instalado).
-# Apps sem equivalencia no winget (gradle, openjdk21) sao pulados com aviso.
+# Todos os apps restantes tem equivalente no winget.
 $wingetMap = @{
-    '7zip' = '7zip.7zip'
     'clink' = 'chrisant996.Clink'
     'delta' = 'dandavison.delta'
-    'ffmpeg' = 'Gyan.FFmpeg'
     'fzf' = 'junegunn.fzf'
     'git' = 'Git.Git'
-    'jq' = 'jqlang.jq'
     'lazygit' = 'JesseDuffield.lazygit'
-    'nodejs' = 'OpenJS.NodeJS'
     'oh-my-posh' = 'JanDeDobbeleer.OhMyPosh'
     'zoxide' = 'ajeetdsouza.zoxide'
 }
@@ -72,24 +68,18 @@ function ComandoExiste {
 
 # Mapeia nome do app Scoop para o comando que ele instala
 $appComando = @{
-    '7zip' = '7z'
     'clink' = 'clink'
     'delta' = 'delta'
-    'ffmpeg' = 'ffmpeg'
     'fzf' = 'fzf'
     'git' = 'git'
-    'jq' = 'jq'
     'lazygit' = 'lazygit'
-    'nodejs' = 'node'
     'oh-my-posh' = 'oh-my-posh'
     'zoxide' = 'zoxide'
 }
 
 # Apps sem equivalente no winget: aponta para instalacao manual
-$manualMap = @{
-    'gradle' = 'https://gradle.org/install/'
-    'openjdk21' = 'https://adoptium.net/'
-}
+# (nenhum app restante precisa de instalacao manual)
+$manualMap = @{}
 
 # Testa conexao TCP (nao precisa de ICMP nem de admin)
 function RedeOk {
