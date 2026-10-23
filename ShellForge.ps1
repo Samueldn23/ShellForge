@@ -241,7 +241,7 @@ function Show-ShellForgeMenuWpf {
     $btnRun    = $window.FindName('btnRun')
     $btnCancel = $window.FindName('btnCancel')
 
-    $state = [hashtable]::Synchronized(@{ Result = $null; Mode = 'Full'; ScoopApps = @(); Modulos = $true; Fonte = $true; Configs = $true; Wsl = $true; RegClinkAutorun = $true; RegExplorerMenu = $true; EnvPath = $true; EnvPoshThemes = $true; EnvClinkDir = $true; EnvTelemetry = $true })
+    $state = [hashtable]::Synchronized(@{ Result = $null; Mode = 'Full'; ScoopApps = @(); Modulos = $true; Fonte = $true; Configs = $null; Wsl = $true; RegClinkAutorun = $true; RegExplorerMenu = $true; EnvPath = $true; EnvPoshThemes = $true; EnvClinkDir = $true; EnvTelemetry = $true })
 
     function New-Cb {
         param([string]$Label, [bool]$Checked, [string]$Tag)
@@ -309,9 +309,32 @@ function Show-ShellForgeMenuWpf {
     $cbFonte = New-Cb "Hack Nerd Font" $true "fonte"
     New-WrapGroup "Fonte" { param($wrap); $wrap.Children.Add($cbFonte) | Out-Null }
 
-    # --- Configuracoes ---
-    $cbConfigs = New-Cb "Configs (perfis, bashrc, gitconfig, tema, WT, Clink)" $true "configs"
-    New-WrapGroup "Configuracoes" { param($wrap); $wrap.Children.Add($cbConfigs) | Out-Null }
+    # --- Configuracoes (individuais) ---
+    $cbCfgAll = New-Cb "Selecionar tudo" $true "cfg-all"
+    $cfgCbs = [System.Collections.ArrayList]::new()
+    $cfgItems = @(
+        @{ Label = "pwsh-profile.ps1";     Tag = "cfg:pwsh-profile" },
+        @{ Label = "powershell51-profile"; Tag = "cfg:powershell51-profile" },
+        @{ Label = "bashrc";               Tag = "cfg:bashrc" },
+        @{ Label = "bash_profile";         Tag = "cfg:bash_profile" },
+        @{ Label = "gitconfig";            Tag = "cfg:gitconfig" },
+        @{ Label = "custom.omp.json";      Tag = "cfg:custom.omp.json" },
+        @{ Label = "clink_settings";       Tag = "cfg:clink_settings" },
+        @{ Label = "settings-terminal";    Tag = "cfg:settings-terminal" }
+    )
+    New-WrapGroup "Configuracoes" {
+        param($wrap)
+        $wrap.Children.Add($cbCfgAll) | Out-Null
+        foreach ($item in $cfgItems) {
+            $cb = New-Cb "  $($item.Label)" $true $item.Tag
+            $wrap.Children.Add($cb) | Out-Null
+            $cfgCbs.Add($cb) | Out-Null
+        }
+    }
+    $cbCfgAll.Add_Checked({ foreach ($c in $cfgCbs) { $c.IsChecked = $true } }.GetNewClosure())
+    $cbCfgAll.Add_Unchecked({ foreach ($c in $cfgCbs) { $c.IsChecked = $false } }.GetNewClosure())
+    # alias para compatibilidade com o restante do script (true se ao menos um selecionado)
+    $cbConfigs = $cbCfgAll
 
     # --- WSL ---
     $cbWsl = New-Cb "WSL (tema Oh My Posh)" $true "wsl"
@@ -379,7 +402,11 @@ function Show-ShellForgeMenuWpf {
         $state.ScoopApps  = $selectedApps
         $state.Modulos    = (@($modCbs | Where-Object { $_.IsChecked })).Count -gt 0
         $state.Fonte      = ($cbFonte.IsChecked -eq $true)
-        $state.Configs    = ($cbConfigs.IsChecked -eq $true)
+        $selectedCfgs = @()
+        foreach ($cb in $cfgCbs) {
+            if ($cb.IsChecked) { $selectedCfgs += ($cb.Tag -replace '^cfg:','') }
+        }
+        $state.Configs    = $selectedCfgs
         $state.Wsl        = ($cbWsl.IsChecked -eq $true)
         $state.RegClinkAutorun = ($cbRegClink.IsChecked -eq $true)
         $state.RegExplorerMenu = ($cbRegExplorer.IsChecked -eq $true)
@@ -694,35 +721,38 @@ if (-not $temFonte -and -not $SomenteConfig -and $selecao.Fonte) {
 Foco '[4/7] Arquivos de configuracao'
 # ===========================================================================
 $home_ = $env:USERPROFILE
-if (-not $selecao.Configs) {
+$cfgSelected = $selecao.Configs
+$installCfg = { param($name) ($null -eq $cfgSelected) -or ($name -in $cfgSelected) }
+
+if ($cfgSelected -is [array] -and $cfgSelected.Count -eq 0) {
     Aviso 'pulado (desmarcado no menu)'
 } else {
 # Documents pode estar redirecionado: usa o caminho real em vez de $HOME\Documents
 $docs = [Environment]::GetFolderPath('MyDocuments')
 
-InstalarArquivo (Join-Path $arquivos 'pwsh-profile.ps1')      (Join-Path $docs 'PowerShell\Microsoft.PowerShell_profile.ps1')
-InstalarArquivo (Join-Path $arquivos 'powershell51-profile.ps1') (Join-Path $docs 'WindowsPowerShell\Microsoft.PowerShell_profile.ps1')
-InstalarArquivo (Join-Path $arquivos 'bashrc')                 (Join-Path $home_ '.bashrc')
-InstalarArquivo (Join-Path $arquivos 'bash_profile')           (Join-Path $home_ '.bash_profile')
-InstalarArquivo (Join-Path $arquivos 'gitconfig')              (Join-Path $home_ '.gitconfig')
-InstalarArquivo (Join-Path $arquivos 'custom.omp.json')        (Join-Path $home_ '.omp\custom.omp.json')
+if (& $installCfg 'pwsh-profile') { InstalarArquivo (Join-Path $arquivos 'pwsh-profile.ps1')      (Join-Path $docs 'PowerShell\Microsoft.PowerShell_profile.ps1') }
+if (& $installCfg 'powershell51-profile') { InstalarArquivo (Join-Path $arquivos 'powershell51-profile.ps1') (Join-Path $docs 'WindowsPowerShell\Microsoft.PowerShell_profile.ps1') }
+if (& $installCfg 'bashrc') { InstalarArquivo (Join-Path $arquivos 'bashrc')                 (Join-Path $home_ '.bashrc') }
+if (& $installCfg 'bash_profile') { InstalarArquivo (Join-Path $arquivos 'bash_profile')           (Join-Path $home_ '.bash_profile') }
+if (& $installCfg 'gitconfig') { InstalarArquivo (Join-Path $arquivos 'gitconfig')              (Join-Path $home_ '.gitconfig') }
+if (& $installCfg 'custom.omp.json') { InstalarArquivo (Join-Path $arquivos 'custom.omp.json')        (Join-Path $home_ '.omp\custom.omp.json') }
 
 # Clink: o diretorio de estado e %LOCALAPPDATA%\clink
-InstalarArquivo (Join-Path $arquivos 'clink_settings') (Join-Path $env:LOCALAPPDATA 'clink\clink_settings')
+if (& $installCfg 'clink_settings') { InstalarArquivo (Join-Path $arquivos 'clink_settings') (Join-Path $env:LOCALAPPDATA 'clink\clink_settings') }
 
 # Windows Terminal: o LocalState muda com o usuario, procura o caminho real
 $pkg = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json'
-if (Test-Path $pkg) {
+if ((& $installCfg 'settings-terminal') -and (Test-Path $pkg)) {
     InstalarArquivo (Join-Path $arquivos 'settings-terminal.json') $pkg
     Aviso 'Se algum perfil nao aparecer no Windows Terminal, confira os GUIDs em arquivos\settings-terminal.json.'
-} else {
+} elseif (-not (Test-Path $pkg)) {
     Aviso 'Windows Terminal nao encontrado (pacote MSIX ausente). settings-terminal.json ficou em arquivos\ para aplicar manualmente.'
 }
 } # fim Configs
 
 # Validacao do tema: o WSL tambem valida, mas no Windows vale garantir aqui
 $temaDestino = Join-Path $home_ '.omp\custom.omp.json'
-if ((Test-Path $temaDestino) -and (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
+if ((& $installCfg 'custom.omp.json') -and (Test-Path $temaDestino) -and (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
     $saidaTema = & oh-my-posh print primary --config $temaDestino 2>&1 | Out-String
     if ($saidaTema -match 'unable to create text') { Erro 'custom.omp.json tem template invalido' }
     else { Ok 'custom.omp.json renderiza sem erro' }
