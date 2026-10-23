@@ -24,11 +24,29 @@
 # Para voltar ao tema empacotado do Scoop, troque a linha abaixo por:
 #   $OmpTheme = Join-Path $env:POSH_THEMES_PATH 'powerlevel10k_rainbow.omp.json'
 $OmpTheme = "$env:USERPROFILE\.omp\custom.omp.json"
+$ompCache = "$env:USERPROFILE\.omp\init-cache.ps1"
 
-if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
-    oh-my-posh init pwsh --config $OmpTheme | Invoke-Expression
-}
-elseif (Test-Path $OmpTheme) {
+$ompExe = $null
+if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) { $ompExe = 'oh-my-posh' }
+elseif (Test-Path "$env:USERPROFILE\scoop\shims\oh-my-posh.exe") { $ompExe = "$env:USERPROFILE\scoop\shims\oh-my-posh.exe" }
+
+if ($ompExe -and (Test-Path $OmpTheme)) {
+    # Cache: gera o script de init uma vez e dot-source nas proximas execucoes.
+    # Regenera se o tema ou o oh-my-posh mudou (comparacao por mtime).
+    # Se o cache corromper, basta deletar: Remove-Item ~/.omp/init-cache.ps1
+    $themeMtime = (Get-Item $OmpTheme).LastWriteTimeUtc
+    $exePath = if ($ompExe -eq 'oh-my-posh') { (Get-Command oh-my-posh).Source } else { $ompExe }
+    $exeMtime = (Get-Item $exePath).LastWriteTimeUtc
+    $cacheMtime = if (Test-Path $ompCache) { (Get-Item $ompCache).LastWriteTimeUtc } else { [datetime]::MinValue }
+    if (($themeMtime -gt $cacheMtime) -or ($exeMtime -gt $cacheMtime) -or (-not (Test-Path $ompCache))) {
+        if ($ompExe -eq 'oh-my-posh') {
+            oh-my-posh init pwsh --config $OmpTheme | Out-File $ompCache -Encoding utf8
+        } else {
+            & $ompExe init pwsh --config $OmpTheme | Out-File $ompCache -Encoding utf8
+        }
+    }
+    . $ompCache
+} elseif (Test-Path $OmpTheme) {
     # Fallback: shim do Scoop ainda nao esta no PATH desta sessao
     & "$env:USERPROFILE\scoop\shims\oh-my-posh.exe" init pwsh --config $OmpTheme | Invoke-Expression
 }
