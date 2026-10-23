@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Restaura a personalizacao do shell (Oh My Posh, PSReadLine, modulos, git,
     Windows Terminal, Clink) em outra maquina Windows.
@@ -103,7 +103,7 @@ function RedeOk {
     } catch { return $false }
 }
 
-# Verifica Execution Policy do PowerShell (bloqueia execucao de scripts por padrão)
+# Verifica Execution Policy do PowerShell (bloqueia execucao de scripts por padrÃ£o)
 $execPolicy = Get-ExecutionPolicy -Scope CurrentUser -ErrorAction SilentlyContinue
 if (-not $execPolicy -or $execPolicy -eq 'Restricted') {
     Write-Host ''
@@ -111,7 +111,7 @@ if (-not $execPolicy -or $execPolicy -eq 'Restricted') {
     Write-Host '  ERRO: Execucao de scripts esta bloqueada no PowerShell' -ForegroundColor Yellow
     Write-Host '===========================================================' -ForegroundColor Yellow
     Write-Host ''
-    Write-Host '  Política atual: $execPolicy'
+    Write-Host '  PolÃ­tica atual: $execPolicy'
     Write-Host ''
     Write-Host '  Para habilitar a execucao de scripts (apenas para seu usuario, sem admin):'
     Write-Host ''
@@ -166,7 +166,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     $scriptPath = $PSScriptRoot
     $scriptFile = Join-Path $scriptPath 'ShellForge.ps1'
 
-    # Verifica se precisamos de administrador (para gravação em HKCR, por exemplo)
+    # Verifica se precisamos de administrador (para gravaÃ§Ã£o em HKCR, por exemplo)
     $precisaAdmin = $false
     $identidade = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($identidade)
@@ -186,268 +186,560 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         Write-Host '  Uma janela sera aberta solicitando confirmacao de UAC.'
         Write-Host '===========================================================' -ForegroundColor Yellow
 
-        # Relança o script via pwsh.exe com RunAs (elevado)
+        # RelanÃ§a o script via pwsh.exe com RunAs (elevado)
         Start-Process -FilePath $pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptFile`"" -Verb RunAs -Wait
     } else {
-        # Relança o script via pwsh.exe sem elevacao
+        # RelanÃ§a o script via pwsh.exe sem elevacao
         & $pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptFile
     }
 
-    # Sai do script atual (Windows PowerShell 5.1) apos lançar o pwsh
+    # Sai do script atual (Windows PowerShell 5.1) apos lanÃ§ar o pwsh
     exit 0
 }
 
 # --- Funcao: menu grafico (WPF) com checkboxes por categoria ---------------
+
 function Show-ShellForgeMenuWpf {
+
     param([string[]]$ScoopApps)
 
+
+
     try {
+
         Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+
         Add-Type -AssemblyName PresentationCore       -ErrorAction Stop
+
         Add-Type -AssemblyName WindowsBase           -ErrorAction Stop
+
     } catch { return $null }
+
+
 
     $xaml = @'
+
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
         Title="ShellForge" Height="640" Width="560"
+
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+
         Background="#1E1E2E">
+
   <Grid Margin="20">
+
     <Grid.RowDefinitions>
+
       <RowDefinition Height="Auto"/>
+
       <RowDefinition Height="Auto"/>
+
       <RowDefinition Height="Auto"/>
+
       <RowDefinition Height="*"/>
+
       <RowDefinition Height="Auto"/>
+
     </Grid.RowDefinitions>
+
     <TextBlock Grid.Row="0" Text="ShellForge" FontSize="22" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,2"/>
+
     <TextBlock Grid.Row="1" Text="Personalizacao do shell - modo e componentes" Foreground="#CDD6F4" Margin="0,0,0,10" FontSize="12"/>
+
     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+
       <RadioButton x:Name="rbFull"   IsChecked="True" Content="Completo"  Foreground="#CDD6F4" Margin="0,0,14,0" FontSize="12"/>
+
       <RadioButton x:Name="rbConfig" Content="So config"  Foreground="#CDD6F4" Margin="0,0,14,0" FontSize="12"/>
+
       <RadioButton x:Name="rbSim"    Content="Simulacao"  Foreground="#CDD6F4" FontSize="12"/>
+
     </StackPanel>
+
     <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+
       <StackPanel x:Name="panelGroups"/>
+
     </ScrollViewer>
+
     <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+
       <Button x:Name="btnCancel" Content="Cancelar" Width="96" Margin="0,0,10,0" Padding="6,4"/>
+
       <Button x:Name="btnRun"    Content="Executar" Width="96" Padding="6,4" IsDefault="True" Background="#89B4FA" Foreground="#1E1E2E" FontWeight="Bold"/>
+
     </StackPanel>
+
   </Grid>
+
 </Window>
+
 '@
+
     try {
+
         $x = [xml]$xaml
+
         $reader = New-Object System.Xml.XmlNodeReader $x
+
         $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
     } catch { return $null }
 
+
+
     $rbFull    = $window.FindName('rbFull')
+
     $rbConfig  = $window.FindName('rbConfig')
+
     $rbSim     = $window.FindName('rbSim')
+
     $panel     = $window.FindName('panelGroups')
+
     $btnRun    = $window.FindName('btnRun')
+
     $btnCancel = $window.FindName('btnCancel')
 
-    $state = [hashtable]::Synchronized(@{ Result = $null; Mode = 'Full'; ScoopApps = @(); Modulos = $true; Fonte = $true; Configs = $true; Wsl = $true })
+
+
+    $state = [hashtable]::Synchronized(@{ Result = $null; Mode = 'Full'; ScoopApps = @(); Modulos = $true; Fonte = $true; Configs = $true; Wsl = $true; RegClinkAutorun = $true; RegExplorerMenu = $true; EnvPath = $true; EnvPoshThemes = $true; EnvClinkDir = $true; EnvTelemetry = $true })
+
+
 
     function New-Cb {
+
         param([string]$Label, [bool]$Checked, [string]$Tag)
+
         $cb = New-Object System.Windows.Controls.CheckBox
+
         $cb.Content = $Label
+
         $cb.IsChecked = $Checked
+
         $cb.Foreground = [System.Windows.Media.Brushes]::White
+
         $cb.Margin = [System.Windows.Thickness]::new(0,2,0,2)
+
         $cb.FontSize = 12
+
         if ($Tag) { $cb.Tag = $Tag }
+
         return $cb
+
     }
+
     function New-GroupHeader {
+
         param([string]$Text)
+
         $tb = New-Object System.Windows.Controls.TextBlock
+
         $tb.Text = $Text
+
         $tb.FontWeight = 'Bold'
+
         $tb.Foreground = [System.Windows.Media.Brushes]::LightBlue
+
         $tb.Margin = [System.Windows.Thickness]::new(0,10,0,4)
+
         $tb.FontSize = 13
+
         return $tb
+
     }
+
+
 
     $panel.Children.Add((New-GroupHeader "Ferramentas (Scoop)")) | Out-Null
+
     $cbAllScoop = New-Cb "Selecionar tudo" $true "all-scoop"
+
     $panel.Children.Add($cbAllScoop) | Out-Null
+
     $scoopCbs = @()
+
     foreach ($app in $ScoopApps) {
+
         $cb = New-Cb "  $app" $true "scoop:$app"
+
         $panel.Children.Add($cb) | Out-Null
+
         $scoopCbs += $cb
+
     }
+
     $cbAllScoop.Add_Checked({ foreach ($c in $scoopCbs) { $c.IsChecked = $true } }.GetNewClosure())
+
     $cbAllScoop.Add_Unchecked({ foreach ($c in $scoopCbs) { $c.IsChecked = $false } }.GetNewClosure())
 
+
+
     $panel.Children.Add((New-GroupHeader "Modulos PowerShell")) | Out-Null
+
     $cbAllMod = New-Cb "Selecionar tudo" $true "all-mod"
+
     $panel.Children.Add($cbAllMod) | Out-Null
+
     $modCbs = @()
+
     foreach ($m in @('Terminal-Icons','Posh-Git','PSFzf')) {
+
         $cb = New-Cb "  $m" $true "mod:$m"
+
         $panel.Children.Add($cb) | Out-Null
+
         $modCbs += $cb
+
     }
+
     $cbAllMod.Add_Checked({ foreach ($c in $modCbs) { $c.IsChecked = $true } }.GetNewClosure())
+
     $cbAllMod.Add_Unchecked({ foreach ($c in $modCbs) { $c.IsChecked = $false } }.GetNewClosure())
 
+
+
     $panel.Children.Add((New-GroupHeader "Fonte")) | Out-Null
+
     $cbFonte = New-Cb "Hack Nerd Font" $true "fonte"
+
     $panel.Children.Add($cbFonte) | Out-Null
 
+
+
     $panel.Children.Add((New-GroupHeader "Configuracoes")) | Out-Null
+
     $cbConfigs = New-Cb "Perfis, .bashrc, .gitconfig, tema, Windows Terminal, Clink" $true "configs"
+
     $panel.Children.Add($cbConfigs) | Out-Null
 
+
+
     $panel.Children.Add((New-GroupHeader "WSL")) | Out-Null
+
     $cbWsl = New-Cb "Aplicar tema Oh My Posh nas distros WSL" $true "wsl"
+
     $panel.Children.Add($cbWsl) | Out-Null
 
+    # --- Grupo: Registro ---
+    $panel.Children.Add((New-GroupHeader "Registro (CMD / Explorer)")) | Out-Null
+    $cbRegClink = New-Cb "Clink AutoRun (chcp 65001 + clink inject)" $true "reg-clink"
+    $panel.Children.Add($cbRegClink) | Out-Null
+    $cbRegExplorer = New-Cb "Menu de contexto do Explorer (Abrir com PowerShell 7)" $true "reg-explorer"
+    $panel.Children.Add($cbRegExplorer) | Out-Null
+
+    # --- Grupo: Variaveis de ambiente ---
+    $panel.Children.Add((New-GroupHeader "Variaveis de ambiente")) | Out-Null
+    $cbEnvPath = New-Cb "PATH += scoop\\shims" $true "env-path"
+    $panel.Children.Add($cbEnvPath) | Out-Null
+    $cbEnvPosh = New-Cb "POSH_THEMES_PATH" $true "env-posh"
+    $panel.Children.Add($cbEnvPosh) | Out-Null
+    $cbEnvClink = New-Cb "CLINK_DIR" $true "env-clink"
+    $panel.Children.Add($cbEnvClink) | Out-Null
+    $cbEnvTelem = New-Cb "POWERSHELL_TELEMETRY_OPTOUT = 1" $true "env-telem"
+    $panel.Children.Add($cbEnvTelem) | Out-Null
+
     $applyMode = {
+
         param($mode)
+
         if ($mode -eq 'Full') {
+
             $cbAllScoop.IsChecked = $true
+
             $cbAllMod.IsChecked   = $true
+
             $cbFonte.IsChecked    = $true
+
             $cbConfigs.IsChecked  = $true
+
             $cbWsl.IsChecked      = $true
+            $cbRegClink.IsChecked    = $true
+            $cbRegExplorer.IsChecked = $true
+            $cbEnvPath.IsChecked    = $true
+            $cbEnvPosh.IsChecked    = $true
+            $cbEnvClink.IsChecked   = $true
+            $cbEnvTelem.IsChecked   = $true
+
         } elseif ($mode -eq 'Config') {
+
             $cbAllScoop.IsChecked = $false
+
             $cbAllMod.IsChecked   = $false
+
             $cbFonte.IsChecked    = $false
+
             $cbConfigs.IsChecked  = $true
+
             $cbWsl.IsChecked      = $true
+            $cbRegClink.IsChecked    = $true
+            $cbRegExplorer.IsChecked = $true
+            $cbEnvPath.IsChecked    = $true
+            $cbEnvPosh.IsChecked    = $true
+            $cbEnvClink.IsChecked   = $true
+            $cbEnvTelem.IsChecked   = $true
+
         }
+
     }.GetNewClosure()
+
+
 
     & $applyMode 'Full'
 
+
+
     $rbFull.Add_Checked({ & $applyMode 'Full' }.GetNewClosure())
+
     $rbConfig.Add_Checked({ & $applyMode 'Config' }.GetNewClosure())
 
+
+
     $btnRun.Add_Click({
+
         $mode = 'Full'
+
         if ($rbConfig.IsChecked) { $mode = 'Config' }
+
         elseif ($rbSim.IsChecked) { $mode = 'Sim' }
 
+
+
         $selectedApps = @()
+
         foreach ($cb in $scoopCbs) {
+
             if ($cb.IsChecked) { $selectedApps += ($cb.Tag -replace '^scoop:','') }
+
         }
 
+
+
         $state.Mode       = $mode
+
         $state.ScoopApps  = $selectedApps
+
         $state.Modulos    = (@($modCbs | Where-Object { $_.IsChecked })).Count -gt 0
+
         $state.Fonte      = ($cbFonte.IsChecked -eq $true)
+
         $state.Configs    = ($cbConfigs.IsChecked -eq $true)
+
         $state.Wsl        = ($cbWsl.IsChecked -eq $true)
+        $state.RegClinkAutorun = ($cbRegClink.IsChecked -eq $true)
+        $state.RegExplorerMenu = ($cbRegExplorer.IsChecked -eq $true)
+        $state.EnvPath        = ($cbEnvPath.IsChecked -eq $true)
+        $state.EnvPoshThemes  = ($cbEnvPosh.IsChecked -eq $true)
+        $state.EnvClinkDir    = ($cbEnvClink.IsChecked -eq $true)
+        $state.EnvTelemetry   = ($cbEnvTelem.IsChecked -eq $true)
         $state.Result     = 'OK'
+
         $window.Close()
+
     }.GetNewClosure())
+
+
 
     $btnCancel.Add_Click({ $window.Close() }.GetNewClosure())
 
+
+
     $window.ShowDialog() | Out-Null
+
     if ($state.Result -ne 'OK') { return $null }
+
     return $state
+
 }
+
+
 
 # --- Menu (WPF se disponivel, senao texto) ------------------------------------
+
 $wpfOk = $false
+
 try {
+
     Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+
     Add-Type -AssemblyName PresentationCore       -ErrorAction Stop
+
     Add-Type -AssemblyName WindowsBase           -ErrorAction Stop
+
     $wpfOk = $true
+
 } catch { $wpfOk = $false }
 
+
+
 $scoopAppNames = @()
+
 $arqScoopTmp = Join-Path $listas 'scoop-apps.txt'
+
 if (Test-Path $arqScoopTmp) {
+
     $scoopAppNames = Get-Content $arqScoopTmp | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object {
+
         $p = $_ -split '\|'; $p[0]
+
     } | Where-Object { $_ -notin @('scoop','scoop-search','winget') }
+
 }
+
+
 
 if (-not $SomenteConfig -and -not $Simular -and -not $PularMenu -and -not $SelecaoArquivo -and -not [Console]::IsInputRedirected) {
+
     if ($wpfOk) {
+
         $menuResult = Show-ShellForgeMenuWpf -ScoopApps $scoopAppNames
+
         if ($null -eq $menuResult) {
+
             Write-Host 'Cancelado.' -ForegroundColor Yellow
+
             exit 0
+
         }
+
         $modo = $menuResult.Mode
+
         if ($modo -eq 'Config') { $SomenteConfig = $true }
+
         if ($modo -eq 'Sim')    { $Simular       = $true }
+
         $selecao = @{
+
             ScoopApps = $menuResult.ScoopApps
+
             Modulos   = $menuResult.Modulos
+
             Fonte     = $menuResult.Fonte
+
             Configs   = $menuResult.Configs
+
             Wsl       = $menuResult.Wsl
+            RegClinkAutorun = $menuResult.RegClinkAutorun
+            RegExplorerMenu = $menuResult.RegExplorerMenu
+            EnvPath        = $menuResult.EnvPath
+            EnvPoshThemes  = $menuResult.EnvPoshThemes
+            EnvClinkDir    = $menuResult.EnvClinkDir
+            EnvTelemetry   = $menuResult.EnvTelemetry
         }
+
     } else {
+
         Write-Host ''
+
         Write-Host '===========================================================' -ForegroundColor Cyan
+
         Write-Host '  ShellForge - escolha o modo de instalacao' -ForegroundColor Cyan
+
         Write-Host '===========================================================' -ForegroundColor Cyan
+
         Write-Host '  1. Instalacao completa (Scoop, modulos, fonte, configs, WSL)'
+
         Write-Host '  2. Somente configuracao (pula Scoop/modulos/fonte, aplica WSL)'
+
         Write-Host '  3. Simulacao (dry-run: mostra tudo, nao altera nada)'
+
         Write-Host '  4. Sair'
+
         Write-Host '===========================================================' -ForegroundColor Cyan
+
         do {
+
             $escolha = Read-Host 'Opcao [1-4] (padrao: 1)'
+
             if ([string]::IsNullOrWhiteSpace($escolha)) { $escolha = '1' }
+
         } while ($escolha -notin @('1','2','3','4'))
+
         switch ($escolha) {
+
             '2' { $SomenteConfig = $true }
+
             '3' { $Simular       = $true }
+
             '4' { Write-Host 'Cancelado.' -ForegroundColor Yellow; exit 0 }
+
         }
+
         $selecao = @{
+
             ScoopApps = $null
+
             Modulos   = (-not $SomenteConfig)
+
             Fonte     = (-not $SomenteConfig)
+
             Configs   = $true
+
             Wsl       = $true
+            RegClinkAutorun = $true
+            RegExplorerMenu = $true
+            EnvPath        = $true
+            EnvPoshThemes  = $true
+            EnvClinkDir    = $true
+            EnvTelemetry   = $true
         }
+
         Write-Host ''
+
     }
+
 } else {
+
     if (-not $selecao) {
+
         $selecao = @{
+
             ScoopApps = $null
+
             Modulos   = (-not $SomenteConfig)
+
             Fonte     = (-not $SomenteConfig)
+
             Configs   = $true
+
             Wsl       = $true
+            RegClinkAutorun = $true
+            RegExplorerMenu = $true
+            EnvPath        = $true
+            EnvPoshThemes  = $true
+            EnvClinkDir    = $true
+            EnvTelemetry   = $true
         }
+
     }
+
 }
+
+
 
 if ($SelecaoArquivo -and (Test-Path $SelecaoArquivo)) {
+
     try {
+
         $loaded = Get-Content $SelecaoArquivo -Raw | ConvertFrom-Json -AsHashtable
+
         if ($loaded) { $selecao = $loaded }
+
     } catch { }
+
 }
+
+
 
 if (-not $selecao) {
-    $selecao = @{ ScoopApps = $null; Modulos = (-not $SomenteConfig); Fonte = (-not $SomenteConfig); Configs = $true; Wsl = $true }
+
+    $selecao = @{ ScoopApps = $null; Modulos = (-not $SomenteConfig); Fonte = (-not $SomenteConfig); Configs = $true; Wsl = $true; RegClinkAutorun = $true; RegExplorerMenu = $true; EnvPath = $true; EnvPoshThemes = $true; EnvClinkDir = $true; EnvTelemetry = $true }
+
 }
 
-# Log de execucao em arquivo (facilita depuracao em outra maquina)
-$logFile = Join-Path $env:TEMP "ShellForge-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
-try { Start-Transcript -Path $logFile -ErrorAction Stop | Out-Null } catch { $logFile = $null }
+
 
 # Log de execucao em arquivo (facilita depuracao em outra maquina)
 $logFile = Join-Path $env:TEMP "ShellForge-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
@@ -596,7 +888,9 @@ try {
 } catch {
     $temFonte = $false
 }
-if ($temFonte) {
+if (-not $selecao.Fonte) {
+    Aviso 'pulado (desmarcado no menu)'
+} elseif ($temFonte) {
     Ok "$fonteNerd ja instalada"
 } elseif ($Simular) {
     Aviso 'instalaria uma fonte Nerd (FiraCode ou Hack) - veja README.md'
@@ -694,7 +988,9 @@ if (-not (Test-Path $clinkBat)) {
         if ($clinkExe) { $clinkBat = $clinkExe.FullName }
     } else { $clinkBat = $clinkCmd.Source }
 }
-if ($Simular) {
+if (-not $selecao.RegClinkAutorun) {
+    Aviso 'pulado (desmarcado no menu)'
+} elseif ($Simular) {
     Aviso 'gravaria AutoRun do Command Processor (chcp 65001 + clink inject)'
 } elseif ($clinkBat -and (Test-Path $clinkBat)) {
     Executar 'AutoRun = chcp 65001 && clink inject --autorun' {
@@ -716,33 +1012,41 @@ $shims = Join-Path $env:USERPROFILE 'scoop\shims'
 if ($Simular) {
     Aviso 'setaria POSH_THEMES_PATH, CLINK_DIR e a entrada scoop\shims no PATH'
 } else {
-    Executar 'PATH de usuario contem scoop\shims' {
-        $p = [Environment]::GetEnvironmentVariable('Path','User') -split ';' | Where-Object { $_ }
-        if ($p -notcontains $shims) {
-            [Environment]::SetEnvironmentVariable('Path', (($p + $shims) -join ';'), 'User')
+    if ($selecao.EnvPath) {
+        Executar 'PATH de usuario contem scoop\shims' {
+            $p = [Environment]::GetEnvironmentVariable('Path','User') -split ';' | Where-Object { $_ }
+            if ($p -notcontains $shims) {
+                [Environment]::SetEnvironmentVariable('Path', (($p + $shims) -join ';'), 'User')
+            }
         }
-    }
-    Executar 'POSH_THEMES_PATH' {
-        # Procura os temas do Oh My Posh no Scoop ou no winget (MSIX/programa)
-        $temas = @(
-            (Join-Path $env:USERPROFILE 'scoop\apps\oh-my-posh\current\themes'),
-            (Join-Path $env:LOCALAPPDATA 'Programs\oh-my-posh\themes'),
-            (Join-Path $env:LOCALAPPDATA 'oh-my-posh\themes')
-        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-        if ($temas) { [Environment]::SetEnvironmentVariable('POSH_THEMES_PATH', $temas, 'User') }
-    }
-    Executar 'CLINK_DIR' {
-        $c = Join-Path $env:USERPROFILE 'scoop\apps\clink\current'
-        if (-not (Test-Path $c)) {
-            # Clink instalado via winget fica em outro lugar; usa o dir do exe
-            $clinkCmd = Get-Command clink -ErrorAction SilentlyContinue
-            if ($clinkCmd) { $c = Split-Path $clinkCmd.Source }
+    } else { Aviso 'pulado (desmarcado no menu): PATH scoop\shims' }
+    if ($selecao.EnvPoshThemes) {
+        Executar 'POSH_THEMES_PATH' {
+            # Procura os temas do Oh My Posh no Scoop ou no winget (MSIX/programa)
+            $temas = @(
+                (Join-Path $env:USERPROFILE 'scoop\apps\oh-my-posh\current\themes'),
+                (Join-Path $env:LOCALAPPDATA 'Programs\oh-my-posh\themes'),
+                (Join-Path $env:LOCALAPPDATA 'oh-my-posh\themes')
+            ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+            if ($temas) { [Environment]::SetEnvironmentVariable('POSH_THEMES_PATH', $temas, 'User') }
         }
-        if (Test-Path $c) { [Environment]::SetEnvironmentVariable('CLINK_DIR', $c, 'User') }
-    }
-    Executar 'POWERSHELL_TELEMETRY_OPTOUT = 1' {
-        [Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', '1', 'User')
-    }
+    } else { Aviso 'pulado (desmarcado no menu): POSH_THEMES_PATH' }
+    if ($selecao.EnvClinkDir) {
+        Executar 'CLINK_DIR' {
+            $c = Join-Path $env:USERPROFILE 'scoop\apps\clink\current'
+            if (-not (Test-Path $c)) {
+                # Clink instalado via winget fica em outro lugar; usa o dir do exe
+                $clinkCmd = Get-Command clink -ErrorAction SilentlyContinue
+                if ($clinkCmd) { $c = Split-Path $clinkCmd.Source }
+            }
+            if (Test-Path $c) { [Environment]::SetEnvironmentVariable('CLINK_DIR', $c, 'User') }
+        }
+    } else { Aviso 'pulado (desmarcado no menu): CLINK_DIR' }
+    if ($selecao.EnvTelemetry) {
+        Executar 'POWERSHELL_TELEMETRY_OPTOUT = 1' {
+            [Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', '1', 'User')
+        }
+    } else { Aviso 'pulado (desmarcado no menu): POWERSHELL_TELEMETRY_OPTOUT' }
 }
 
 # ===========================================================================
@@ -834,6 +1138,9 @@ if ($Simular) {
     }
 
     # --- 8b: Windows Explorer - adicionar PowerShell 7 ao menu de contexto ---
+    if (-not $selecao.RegExplorerMenu) {
+        Aviso 'pulado (desmarcado no menu)'
+    } else {
     Executar 'Windows Explorer: adicionar PowerShell 7 ao menu de contexto (pastas e drives)' {
         $pwshExe = Join-Path $env:ProgramFiles 'PowerShell\7\pwsh.exe'
         if (-not (Test-Path $pwshExe)) {
@@ -847,7 +1154,7 @@ if ($Simular) {
         # Comando para o menu de contexto do Explorer
         $comando = '"' + $pwshExe + '" -NoExit -Command "Set-Location ''%V''"'
 
-        # Caminho do ícone com índice (o PowerShell 7 tem o ícone azul no índice 0 do executável)
+        # Caminho do Ã­cone com Ã­ndice (o PowerShell 7 tem o Ã­cone azul no Ã­ndice 0 do executÃ¡vel)
         $iconePwsh = $pwshExe + ',0'
 
         try {
@@ -873,6 +1180,7 @@ if ($Simular) {
         } catch {
             Aviso "Falha ao configurar menu de contexto: $($_.Exception.Message)"
         }
+    } # fim RegExplorerMenu
     }
 }
 
