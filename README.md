@@ -55,6 +55,21 @@ irm https://raw.githubusercontent.com/Samueldn23/ShellForge/main/install.ps1 | i
 > `install.ps1` antes de rodar. O script é idempotente e grava `.bak` dos
 > arquivos originais.
 
+### Atalhos `.bat` (duplo clique)
+
+Para quem prefere não digitar comandos, há dois lançadores:
+
+- `ShellForge.bat` — roda o `ShellForge.ps1` local (mesma pasta). Aceita
+  argumentos: `ShellForge.bat -Simular`, `ShellForge.bat -SomenteConfig`.
+- `install.bat` — baixa e roda o instalador one-shot (equivalente ao
+  `irm https://is.gd/shellforge | iex`). Argumentos não são repassados ao
+  script remoto; para `-Simular`/`-SomenteConfig` use o `ShellForge.bat`
+  ao lado do repo.
+
+> **Nota:** um `.bat` 100% puro não é viável para este projeto (sem WPF, sem
+> injeção base64 no WSL, sem edição de JSON do Windows Terminal). Os `.bat`
+> acima são **lançadores** que chamam o PowerShell 7 por baixo.
+
 O script é **idempotente**: pode ser rodado quantas vezes quiser. Nada é
 sobrescrito às cegas — cada arquivo é comparado por SHA256 e o original é
 guardado como `.bak.<aaaaMMdd-HHmmss>` antes de ser substituído.
