@@ -210,7 +210,7 @@ function Show-ShellForgeMenuWpf {
     $xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ShellForge" Height="560" Width="560"
+        Title="ShellForge" Height="650" Width="1000"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Background="#1E1E2E">
   <Grid Margin="20">
@@ -261,7 +261,7 @@ function Show-ShellForgeMenuWpf {
         $cb.Foreground = [System.Windows.Media.Brushes]::White
         $cb.Margin = [System.Windows.Thickness]::new(0,2,0,2)
         $cb.FontSize = 12
-        $cb.Width = 170
+        $cb.Width = 240
         if ($Tag) { $cb.Tag = $Tag }
         return $cb
     }
