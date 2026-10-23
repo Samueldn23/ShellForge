@@ -197,37 +197,43 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     exit 0
 }
 
-# --- Funcao: menu grafico (WPF), estilo winutil -------------------------------
+# --- Funcao: menu grafico (WPF) com checkboxes por categoria ---------------
 function Show-ShellForgeMenuWpf {
+    param([string[]]$ScoopApps)
+
+    try {
+        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+        Add-Type -AssemblyName PresentationCore       -ErrorAction Stop
+        Add-Type -AssemblyName WindowsBase           -ErrorAction Stop
+    } catch { return $null }
+
     $xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ShellForge" Height="340" Width="540"
+        Title="ShellForge" Height="640" Width="560"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Background="#1E1E2E">
-  <Grid Margin="24">
+  <Grid Margin="20">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-    <TextBlock Grid.Row="0" Text="ShellForge" FontSize="24" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,2"/>
-    <TextBlock Grid.Row="1" Text="Personalizacao do shell - escolha o modo de instalacao" Foreground="#CDD6F4" Margin="0,0,0,16" FontSize="12"/>
-    <StackPanel Grid.Row="2">
-      <RadioButton x:Name="rbFull" IsChecked="True" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
-        <TextBlock Text="Instalacao completa (Scoop, modulos, fonte, configs, WSL)"/>
-      </RadioButton>
-      <RadioButton x:Name="rbConfig" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
-        <TextBlock Text="Somente configuracao (pula Scoop/modulos/fonte, aplica WSL)"/>
-      </RadioButton>
-      <RadioButton x:Name="rbSim" Foreground="#CDD6F4" Margin="0,6" FontSize="13">
-        <TextBlock Text="Simulacao (dry-run: mostra tudo, nao altera nada)"/>
-      </RadioButton>
+    <TextBlock Grid.Row="0" Text="ShellForge" FontSize="22" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,2"/>
+    <TextBlock Grid.Row="1" Text="Personalizacao do shell - modo e componentes" Foreground="#CDD6F4" Margin="0,0,0,10" FontSize="12"/>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+      <RadioButton x:Name="rbFull"   IsChecked="True" Content="Completo"  Foreground="#CDD6F4" Margin="0,0,14,0" FontSize="12"/>
+      <RadioButton x:Name="rbConfig" Content="So config"  Foreground="#CDD6F4" Margin="0,0,14,0" FontSize="12"/>
+      <RadioButton x:Name="rbSim"    Content="Simulacao"  Foreground="#CDD6F4" FontSize="12"/>
     </StackPanel>
-    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-      <Button x:Name="btnCancel" Content="Cancelar" Width="100" Margin="0,0,10,0" Padding="8,5"/>
-      <Button x:Name="btnRun" Content="Executar" Width="100" Padding="8,5" IsDefault="True" Background="#89B4FA" Foreground="#1E1E2E" FontWeight="Bold"/>
+    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+      <StackPanel x:Name="panelGroups"/>
+    </ScrollViewer>
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button x:Name="btnCancel" Content="Cancelar" Width="96" Margin="0,0,10,0" Padding="6,4"/>
+      <Button x:Name="btnRun"    Content="Executar" Width="96" Padding="6,4" IsDefault="True" Background="#89B4FA" Foreground="#1E1E2E" FontWeight="Bold"/>
     </StackPanel>
   </Grid>
 </Window>
@@ -241,21 +247,117 @@ function Show-ShellForgeMenuWpf {
     $rbFull    = $window.FindName('rbFull')
     $rbConfig  = $window.FindName('rbConfig')
     $rbSim     = $window.FindName('rbSim')
+    $panel     = $window.FindName('panelGroups')
     $btnRun    = $window.FindName('btnRun')
     $btnCancel = $window.FindName('btnCancel')
 
-    $state = [hashtable]::Synchronized(@{ Result = $null })
+    $state = [hashtable]::Synchronized(@{ Result = $null; Mode = 'Full'; ScoopApps = @(); Modulos = $true; Fonte = $true; Configs = $true; Wsl = $true })
+
+    function New-Cb {
+        param([string]$Label, [bool]$Checked, [string]$Tag)
+        $cb = New-Object System.Windows.Controls.CheckBox
+        $cb.Content = $Label
+        $cb.IsChecked = $Checked
+        $cb.Foreground = [System.Windows.Media.Brushes]::White
+        $cb.Margin = [System.Windows.Thickness]::new(0,2,0,2)
+        $cb.FontSize = 12
+        if ($Tag) { $cb.Tag = $Tag }
+        return $cb
+    }
+    function New-GroupHeader {
+        param([string]$Text)
+        $tb = New-Object System.Windows.Controls.TextBlock
+        $tb.Text = $Text
+        $tb.FontWeight = 'Bold'
+        $tb.Foreground = [System.Windows.Media.Brushes]::LightBlue
+        $tb.Margin = [System.Windows.Thickness]::new(0,10,0,4)
+        $tb.FontSize = 13
+        return $tb
+    }
+
+    $panel.Children.Add((New-GroupHeader "Ferramentas (Scoop)")) | Out-Null
+    $cbAllScoop = New-Cb "Selecionar tudo" $true "all-scoop"
+    $panel.Children.Add($cbAllScoop) | Out-Null
+    $scoopCbs = @()
+    foreach ($app in $ScoopApps) {
+        $cb = New-Cb "  $app" $true "scoop:$app"
+        $panel.Children.Add($cb) | Out-Null
+        $scoopCbs += $cb
+    }
+    $cbAllScoop.Add_Checked({ foreach ($c in $scoopCbs) { $c.IsChecked = $true } }.GetNewClosure())
+    $cbAllScoop.Add_Unchecked({ foreach ($c in $scoopCbs) { $c.IsChecked = $false } }.GetNewClosure())
+
+    $panel.Children.Add((New-GroupHeader "Modulos PowerShell")) | Out-Null
+    $cbAllMod = New-Cb "Selecionar tudo" $true "all-mod"
+    $panel.Children.Add($cbAllMod) | Out-Null
+    $modCbs = @()
+    foreach ($m in @('Terminal-Icons','Posh-Git','PSFzf')) {
+        $cb = New-Cb "  $m" $true "mod:$m"
+        $panel.Children.Add($cb) | Out-Null
+        $modCbs += $cb
+    }
+    $cbAllMod.Add_Checked({ foreach ($c in $modCbs) { $c.IsChecked = $true } }.GetNewClosure())
+    $cbAllMod.Add_Unchecked({ foreach ($c in $modCbs) { $c.IsChecked = $false } }.GetNewClosure())
+
+    $panel.Children.Add((New-GroupHeader "Fonte")) | Out-Null
+    $cbFonte = New-Cb "Hack Nerd Font" $true "fonte"
+    $panel.Children.Add($cbFonte) | Out-Null
+
+    $panel.Children.Add((New-GroupHeader "Configuracoes")) | Out-Null
+    $cbConfigs = New-Cb "Perfis, .bashrc, .gitconfig, tema, Windows Terminal, Clink" $true "configs"
+    $panel.Children.Add($cbConfigs) | Out-Null
+
+    $panel.Children.Add((New-GroupHeader "WSL")) | Out-Null
+    $cbWsl = New-Cb "Aplicar tema Oh My Posh nas distros WSL" $true "wsl"
+    $panel.Children.Add($cbWsl) | Out-Null
+
+    $applyMode = {
+        param($mode)
+        if ($mode -eq 'Full') {
+            $cbAllScoop.IsChecked = $true
+            $cbAllMod.IsChecked   = $true
+            $cbFonte.IsChecked    = $true
+            $cbConfigs.IsChecked  = $true
+            $cbWsl.IsChecked      = $true
+        } elseif ($mode -eq 'Config') {
+            $cbAllScoop.IsChecked = $false
+            $cbAllMod.IsChecked   = $false
+            $cbFonte.IsChecked    = $false
+            $cbConfigs.IsChecked  = $true
+            $cbWsl.IsChecked      = $true
+        }
+    }.GetNewClosure()
+
+    & $applyMode 'Full'
+
+    $rbFull.Add_Checked({ & $applyMode 'Full' }.GetNewClosure())
+    $rbConfig.Add_Checked({ & $applyMode 'Config' }.GetNewClosure())
+
     $btnRun.Add_Click({
-        if ($rbFull.IsChecked)        { $state.Result = 'Full' }
-        elseif ($rbConfig.IsChecked)  { $state.Result = 'Config' }
-        elseif ($rbSim.IsChecked)     { $state.Result = 'Sim' }
+        $mode = 'Full'
+        if ($rbConfig.IsChecked) { $mode = 'Config' }
+        elseif ($rbSim.IsChecked) { $mode = 'Sim' }
+
+        $selectedApps = @()
+        foreach ($cb in $scoopCbs) {
+            if ($cb.IsChecked) { $selectedApps += ($cb.Tag -replace '^scoop:','') }
+        }
+
+        $state.Mode       = $mode
+        $state.ScoopApps  = $selectedApps
+        $state.Modulos    = (@($modCbs | Where-Object { $_.IsChecked })).Count -gt 0
+        $state.Fonte      = ($cbFonte.IsChecked -eq $true)
+        $state.Configs    = ($cbConfigs.IsChecked -eq $true)
+        $state.Wsl        = ($cbWsl.IsChecked -eq $true)
+        $state.Result     = 'OK'
         $window.Close()
     }.GetNewClosure())
+
     $btnCancel.Add_Click({ $window.Close() }.GetNewClosure())
 
     $window.ShowDialog() | Out-Null
-    if ($null -eq $state.Result) { return 'Cancel' }
-    return $state.Result
+    if ($state.Result -ne 'OK') { return $null }
+    return $state
 }
 
 # --- Menu (WPF se disponivel, senao texto) ------------------------------------
@@ -267,16 +369,30 @@ try {
     $wpfOk = $true
 } catch { $wpfOk = $false }
 
-if (-not $SomenteConfig -and -not $Simular -and -not [Console]::IsInputRedirected) {
+$scoopAppNames = @()
+$arqScoopTmp = Join-Path $listas 'scoop-apps.txt'
+if (Test-Path $arqScoopTmp) {
+    $scoopAppNames = Get-Content $arqScoopTmp | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object {
+        $p = $_ -split '\|'; $p[0]
+    } | Where-Object { $_ -notin @('scoop','scoop-search','winget') }
+}
+
+if (-not $SomenteConfig -and -not $Simular -and -not $PularMenu -and -not $SelecaoArquivo -and -not [Console]::IsInputRedirected) {
     if ($wpfOk) {
-        $choice = Show-ShellForgeMenuWpf
-        if ($choice -eq 'Cancel' -or $null -eq $choice) {
+        $menuResult = Show-ShellForgeMenuWpf -ScoopApps $scoopAppNames
+        if ($null -eq $menuResult) {
             Write-Host 'Cancelado.' -ForegroundColor Yellow
             exit 0
         }
-        switch ($choice) {
-            'Config' { $SomenteConfig = $true }
-            'Sim'    { $Simular       = $true }
+        $modo = $menuResult.Mode
+        if ($modo -eq 'Config') { $SomenteConfig = $true }
+        if ($modo -eq 'Sim')    { $Simular       = $true }
+        $selecao = @{
+            ScoopApps = $menuResult.ScoopApps
+            Modulos   = $menuResult.Modulos
+            Fonte     = $menuResult.Fonte
+            Configs   = $menuResult.Configs
+            Wsl       = $menuResult.Wsl
         }
     } else {
         Write-Host ''
@@ -297,9 +413,41 @@ if (-not $SomenteConfig -and -not $Simular -and -not [Console]::IsInputRedirecte
             '3' { $Simular       = $true }
             '4' { Write-Host 'Cancelado.' -ForegroundColor Yellow; exit 0 }
         }
+        $selecao = @{
+            ScoopApps = $null
+            Modulos   = (-not $SomenteConfig)
+            Fonte     = (-not $SomenteConfig)
+            Configs   = $true
+            Wsl       = $true
+        }
         Write-Host ''
     }
+} else {
+    if (-not $selecao) {
+        $selecao = @{
+            ScoopApps = $null
+            Modulos   = (-not $SomenteConfig)
+            Fonte     = (-not $SomenteConfig)
+            Configs   = $true
+            Wsl       = $true
+        }
+    }
 }
+
+if ($SelecaoArquivo -and (Test-Path $SelecaoArquivo)) {
+    try {
+        $loaded = Get-Content $SelecaoArquivo -Raw | ConvertFrom-Json -AsHashtable
+        if ($loaded) { $selecao = $loaded }
+    } catch { }
+}
+
+if (-not $selecao) {
+    $selecao = @{ ScoopApps = $null; Modulos = (-not $SomenteConfig); Fonte = (-not $SomenteConfig); Configs = $true; Wsl = $true }
+}
+
+# Log de execucao em arquivo (facilita depuracao em outra maquina)
+$logFile = Join-Path $env:TEMP "ShellForge-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+try { Start-Transcript -Path $logFile -ErrorAction Stop | Out-Null } catch { $logFile = $null }
 
 # Log de execucao em arquivo (facilita depuracao em outra maquina)
 $logFile = Join-Path $env:TEMP "ShellForge-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
@@ -346,6 +494,11 @@ if (Test-Path $arqScoop) {
 }
 # Scoop-search e winget ja vem com a propria instalacao do Scoop; instalar de novo causa conflito
 $scoopApps = $scoopApps | Where-Object { $_.nome -notin @('scoop', 'scoop-search', 'winget') }
+
+# Filtra pelos apps selecionados no menu (se houver selecao explicita)
+if ($null -ne $selecao.ScoopApps) {
+    $scoopApps = $scoopApps | Where-Object { $_.nome -in $selecao.ScoopApps }
+}
 
 if (-not $SomenteConfig -and $scoopApps) {
     $redeOk = RedeOk
@@ -406,12 +559,14 @@ if (-not $SomenteConfig -and $scoopApps) {
     }
 } elseif ($SomenteConfig) {
     Aviso "pulado (SomenteConfig). Para instalar: $($scoopApps.Count) apps via Scoop"
+} elseif (-not $selecao.ScoopApps -or $selecao.ScoopApps.Count -eq 0) {
+    Aviso 'pulado (nenhum app selecionado no menu)'
 }
 
 # ===========================================================================
 Foco '[2/7] Modulos do PowerShell (Terminal-Icons, Posh-Git, PSFzf)'
 # ===========================================================================
-if (-not $SomenteConfig) {
+if (-not $SomenteConfig -and $selecao.Modulos) {
     $modulos = @('Terminal-Icons', 'Posh-Git', 'PSFzf')
     $modulosFaltantes = @()
     foreach ($m in $modulos) {
@@ -426,7 +581,7 @@ if (-not $SomenteConfig) {
             Install-Module -Name $modulosFaltantes -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
         }
     }
-} else { Aviso 'pulado (SomenteConfig)' }
+} else { Aviso 'pulado (SomenteConfig ou desmarcado no menu)' }
 
 # ===========================================================================
 Foco '[3/7] Fonte Nerd (FiraCode ou Hack Nerd Font)'
@@ -453,7 +608,7 @@ if ($temFonte) {
 }
 
 # Se a fonte nao estiver instalada, tenta instalar da pasta arquivos/Hack/
-if (-not $temFonte -and -not $SomenteConfig) {
+if (-not $temFonte -and -not $SomenteConfig -and $selecao.Fonte) {
     $pastaFontes = Join-Path $arquivos 'Hack'
     if (Test-Path $pastaFontes) {
         Add-Type -AssemblyName System.Drawing
@@ -485,9 +640,12 @@ if (-not $temFonte -and -not $SomenteConfig) {
 # ===========================================================================
 Foco '[4/7] Arquivos de configuracao'
 # ===========================================================================
+$home_ = $env:USERPROFILE
+if (-not $selecao.Configs) {
+    Aviso 'pulado (desmarcado no menu)'
+} else {
 # Documents pode estar redirecionado: usa o caminho real em vez de $HOME\Documents
 $docs = [Environment]::GetFolderPath('MyDocuments')
-$home_ = $env:USERPROFILE
 
 InstalarArquivo (Join-Path $arquivos 'pwsh-profile.ps1')      (Join-Path $docs 'PowerShell\Microsoft.PowerShell_profile.ps1')
 InstalarArquivo (Join-Path $arquivos 'powershell51-profile.ps1') (Join-Path $docs 'WindowsPowerShell\Microsoft.PowerShell_profile.ps1')
@@ -507,6 +665,7 @@ if (Test-Path $pkg) {
 } else {
     Aviso 'Windows Terminal nao encontrado (pacote MSIX ausente). settings-terminal.json ficou em arquivos\ para aplicar manualmente.'
 }
+} # fim Configs
 
 # Validacao do tema: o WSL tambem valida, mas no Windows vale garantir aqui
 $temaDestino = Join-Path $home_ '.omp\custom.omp.json'
@@ -589,6 +748,9 @@ if ($Simular) {
 # ===========================================================================
 Foco '[7/7] Distros WSL'
 # ===========================================================================
+if (-not $selecao.Wsl) {
+    Aviso 'pulado (desmarcado no menu)'
+} else {
 $arqDistros = Join-Path $listas 'wsl-distros.txt'
 $scriptWsl  = Join-Path $raiz 'scripts\restaurar-wsl.sh'
 $temaWsl    = Join-Path $arquivos 'custom.omp.json'
@@ -627,6 +789,7 @@ if (Test-Path $arqDistros) {
         }
     }
 } else { Aviso 'lista de distros WSL ausente' }
+} # fim Wsl
 
 # ===========================================================================
 Foco '[8/8] PowerShell 7 como padrao do sistema'
